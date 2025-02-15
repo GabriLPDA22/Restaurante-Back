@@ -14,7 +14,10 @@ namespace CineAPI.Services
         {
             _userRepository = userRepository;
         }
-
+        public async Task<Users?> GetUserByGoogleIdAsync(string googleId)
+        {
+            return await _userRepository.GetByGoogleIdAsync(googleId);
+        }
         public async Task AddUserAsync(Users user)
         {
             // Validar si el correo ya existe
@@ -88,39 +91,25 @@ namespace CineAPI.Services
         // Implementación de GetOrCreateUserAsync para Google
         public async Task<Users> GetOrCreateUserAsync(GoogleJsonWebSignature.Payload payload)
         {
-            // Buscar el usuario por GoogleId o Correo
-            var user = await _userRepository.GetByGoogleIdAsync(payload.Subject)
-                       ?? await _userRepository.GetByEmailAsync(payload.Email);
+            var user = await _userRepository.GetByEmailAsync(payload.Email);
 
-            // Si el usuario no existe, crearlo
             if (user == null)
             {
-                // Determinar el rol basado en el correo
-                string[] roles = new string[] { "User" };  // Rol por defecto
-
-                // Asignar rol Admin si el correo pertenece a un dominio específico (ejemplo)
-                if (payload.Email.EndsWith("@admin.com")) // Cambia esto a tu lógica de asignación de Admin
-                {
-                    roles = new string[] { "Admin" };
-                }
-
                 user = new Users
                 {
                     Nombre = payload.Name,
                     Correo = payload.Email,
-                    GoogleId = payload.Subject,  // GoogleId único para cada usuario
-                    PictureUrl = payload.Picture, // Foto de perfil proporcionada por Google
-                    Roles = roles // Asignar el rol correspondiente
+                    GoogleId = payload.Subject, // ID único de Google
+                    PictureUrl = payload.Picture,
+                    Roles = new string[] { "User" }
                 };
 
-                await _userRepository.AddAsync(user); // Agregar el nuevo usuario
+                await _userRepository.AddAsync(user);
+                Console.WriteLine($"New user created: {user.Nombre} - {user.Correo}");
             }
             else
             {
-                // Si ya existe, actualizar algunos detalles (si es necesario)
-                user.Nombre = payload.Name;
-                user.PictureUrl = payload.Picture; // Actualizar la foto si ha cambiado
-                await _userRepository.UpdateAsync(user);
+                Console.WriteLine($"User already exists: {user.Nombre} - {user.Correo}");
             }
 
             return user;

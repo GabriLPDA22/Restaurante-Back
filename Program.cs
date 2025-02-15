@@ -2,9 +2,11 @@ using Restaurante.Repositories;
 using Restaurante.Repositories.Interfaces;
 using Restaurante.Services;
 using Restaurante.Services.Interfaces;
-using Microsoft.Extensions.Configuration;
 using Microsoft.OpenApi.Models;
-using Npgsql;
+using CineAPI.Repositories.Interfaces;
+using CineAPI.Repositories;
+using CineAPI.Services.Interfaces;
+using CineAPI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,59 +25,60 @@ if (string.IsNullOrEmpty(postgresConnection))
     throw new InvalidOperationException("La cadena de conexión de la base de datos no está configurada. Verifica tu archivo appsettings.json.");
 }
 
-// Imprimir la cadena de conexión para verificar si está bien cargada
+// Imprimir la cadena de conexión para depuración
 Console.WriteLine($"DATABASE_URL: {postgresConnection}");
 
-// Configurar los servicios según el proveedor seleccionado
+// **✅ Configuración de la base de datos**
 if (databaseProvider == "PostgreSQL")
 {
     Console.WriteLine("Usando PostgreSQL...");
-
-    // Configuración del repositorio y servicios para películas
     builder.Services.AddScoped<IProductosRepository>(provider =>
         new ProductosRepository(postgresConnection));
 }
 
-// Registrar IMovieService y su implementación
+// **🔥 Registrar servicios y repositorios correctamente**
 builder.Services.AddScoped<IProductosService, ProductosService>();
+builder.Services.AddScoped<IUserRepository>(provider => new UserRepository(postgresConnection)); // ✅ Pasamos la conexión correctamente
+builder.Services.AddScoped<IUserService, UserService>();
 
-// Configuración de CORS
+// **✅ Configuración de CORS corregida**
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowLocalhost5173",
-        builder =>
-        {
-            builder.WithOrigins("http://localhost:5173")
-                   .AllowAnyHeader()
-                   .AllowAnyMethod();
-        });
+    options.AddPolicy("AllowLocalhost5173", builder =>
+    {
+        builder.WithOrigins("http://localhost:5173") // Asegura que sea el mismo puerto que usas en el front
+               .AllowAnyHeader()
+               .AllowAnyMethod()
+               .AllowCredentials();
+    });
 });
 
-// Configuración de Swagger
+// **✅ Configuración de Swagger**
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "RestauranteAPI", Version = "v1" });
 });
 
+// **✅ Habilitar autenticación y autorización (si es necesario)**
+builder.Services.AddAuthentication();
+builder.Services.AddAuthorization();
+
+// **✅ Configurar controladores**
 builder.Services.AddControllers();
 
 var app = builder.Build();
+app.UseCors("AllowLocalhost5173");
 
-// Configurar el pipeline de la aplicación
+// **🌟 Aplicar Middleware en el ORDEN CORRECTO**
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
     app.UseSwagger();
-    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "RestauantePI v1"));
+    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "RestauranteAPI v1"));
 }
 
 app.UseRouting();
-
-// Usar la política de CORS configurada
-app.UseCors("AllowLocalhost5173");
-
-app.UseAuthorization();
-
+app.UseAuthentication();  
+app.UseAuthorization();   
 app.MapControllers();
-
 app.Run();

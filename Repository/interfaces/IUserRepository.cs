@@ -1,13 +1,10 @@
-
-using System.Threading.Tasks;
-
 namespace CineAPI.Repositories.Interfaces
 {
     public interface IUserRepository
     {
         // Obtener usuario por GoogleId
         Task<Users?> GetByGoogleIdAsync(string googleId);
-        
+
         // Obtener usuario por email
         Task<Users?> GetByEmailAsync(string email);
 
@@ -25,5 +22,6 @@ namespace CineAPI.Repositories.Interfaces
 
         // Obtener un usuario por su ID
         Task<Users?> GetByIdAsync(int userId);
+
     }
 }

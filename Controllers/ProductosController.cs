@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Restaurante.Services.Interfaces;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace Restaurante.Controllers
 {

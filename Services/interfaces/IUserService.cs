@@ -12,6 +12,8 @@ namespace CineAPI.Services.Interfaces
         Task<Users?> GetUserByEmailAsync(string email);
         Task UpdateUserAsync(Users user);
 
+        Task<Users?> GetUserByGoogleIdAsync(string googleId);
+
         // Modificado para aceptar un payload de Google
         Task<Users> GetOrCreateUserAsync(GoogleJsonWebSignature.Payload payload); 
     }

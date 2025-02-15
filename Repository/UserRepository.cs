@@ -145,9 +145,34 @@ namespace CineAPI.Repositories
             await command.ExecuteNonQueryAsync();
         }
 
-        public Task<Users?> GetByGoogleIdAsync(string googleId)
+        public async Task<Users?> GetByGoogleIdAsync(string googleId)
         {
-            throw new NotImplementedException();
+            using var connection = new NpgsqlConnection(_connectionString);
+            await connection.OpenAsync();
+
+            var query = "SELECT * FROM Users WHERE GoogleId = @GoogleId";
+            using var command = new NpgsqlCommand(query, connection);
+
+            command.Parameters.AddWithValue("@GoogleId", googleId);
+
+            using var reader = await command.ExecuteReaderAsync();
+            if (await reader.ReadAsync())
+            {
+                return new Users
+                {
+                    UserID = reader.GetInt32(reader.GetOrdinal("UserID")),
+                    Nombre = reader.GetString(reader.GetOrdinal("Nombre")),
+                    Correo = reader.GetString(reader.GetOrdinal("Correo")),
+                    Password = reader.GetString(reader.GetOrdinal("Password")),
+                    Roles = reader.GetFieldValue<string[]>(reader.GetOrdinal("Roles")),
+                    GoogleId = reader.IsDBNull(reader.GetOrdinal("GoogleId")) ? null : reader.GetString(reader.GetOrdinal("GoogleId")),
+                    PictureUrl = reader.IsDBNull(reader.GetOrdinal("PictureUrl")) ? null : reader.GetString(reader.GetOrdinal("PictureUrl"))
+                };
+            }
+
+            return null;
         }
+
+
     }
 }
