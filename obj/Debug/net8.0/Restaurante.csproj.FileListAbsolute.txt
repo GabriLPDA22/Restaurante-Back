@@ -50,3 +50,4 @@ C:\Programacion\TFGS\2DAW\Restaurante\Back\obj\Debug\net8.0\refint\Restaurante.d
 C:\Programacion\TFGS\2DAW\Restaurante\Back\obj\Debug\net8.0\Restaurante.pdb
 C:\Programacion\TFGS\2DAW\Restaurante\Back\obj\Debug\net8.0\Restaurante.genruntimeconfig.cache
 C:\Programacion\TFGS\2DAW\Restaurante\Back\obj\Debug\net8.0\ref\Restaurante.dll
+C:\Programacion\TFGS\2DAW\Restaurante\Back\bin\Debug\net8.0\BCrypt.Net-Next.dll

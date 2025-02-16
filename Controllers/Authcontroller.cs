@@ -1,100 +1,92 @@
-using CineAPI.Services.Interfaces;
-using Google.Apis.Auth;
 using Microsoft.AspNetCore.Mvc;
+using CineAPI.Services.Interfaces;
 using System.Threading.Tasks;
+using BCrypt.Net; // Asegúrate de tener este using
 
 namespace Restaurante.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/auth")]
     [ApiController]
     public class AuthController : ControllerBase
     {
         private readonly IUserService _userService;
-
+        
         public AuthController(IUserService userService)
         {
             _userService = userService;
         }
 
-        // 🔥 Nuevo método: Recibe el token de Google, lo verifica y autentica al usuario
-        [HttpPost("google-login")]
-        public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest request)
+        // Registro normal (email y contraseña)
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
-            Console.WriteLine($"Received Token: {request.Token}"); // 👀 Imprimir token recibido
-            var payload = await VerifyGoogleToken(request.Token);
-
-            if (payload == null)
+            // Validación de campos obligatorios
+            if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Password))
             {
-                Console.WriteLine("Google token verification failed!"); // 👀 Verificar errores en consola del backend
-                return BadRequest(new { Message = "Invalid Google token." });
+                return BadRequest(new { Message = "El email y la contraseña son obligatorios." });
             }
-
-            var user = await _userService.GetOrCreateUserAsync(payload);
-
-            return Ok(new
+            
+            // Opcional: Normalizar el email (por ejemplo, a minúsculas)
+            var normalizedEmail = request.Email.ToLowerInvariant();
+            
+            var user = new Users
             {
-                user.UserID,
-                user.Nombre,
-                user.Correo,
-                user.PictureUrl,
-                user.Roles
-            });
-        }
+                Nombre = string.IsNullOrEmpty(request.Nombre) ? "Sin Nombre" : request.Nombre,
+                Email = normalizedEmail,
+                Password = _userService.HashPassword(request.Password)
+            };
 
-
-        // ✅ Método para obtener información del usuario autenticado
-        [HttpGet("me")]
-        public async Task<IActionResult> GetCurrentUser()
-        {
-            if (User.Identity == null || !User.Identity.IsAuthenticated)
-            {
-                return Unauthorized(new { Message = "User not authenticated." });
-            }
-
-            var googleId = User.FindFirst("sub")?.Value; // Obtener Google ID
-            if (string.IsNullOrEmpty(googleId))
-            {
-                return Unauthorized(new { Message = "User not authenticated." });
-            }
-
-            var user = await _userService.GetUserByGoogleIdAsync(googleId);
-            if (user == null)
-            {
-                return NotFound(new { Message = "User not found." });
-            }
-
-            return Ok(new
-            {
-                user.UserID,
-                user.Nombre,
-                user.Correo,
-                user.PictureUrl,
-                user.Roles
-            });
-        }
-
-        // ✅ Método para verificar el token de Google
-        private async Task<GoogleJsonWebSignature.Payload> VerifyGoogleToken(string token)
-        {
             try
             {
-                var settings = new GoogleJsonWebSignature.ValidationSettings
-                {
-                    Audience = new[] { "812430762080-ktkqmivkpjo15cnid2ch4dd217r04v4l.apps.googleusercontent.com" } // ⚠️ Reemplaza con tu Client ID
-                };
-
-                var payload = await GoogleJsonWebSignature.ValidateAsync(token, settings);
-                return payload;
+                await _userService.AddUserAsync(user);
+                return Ok(new { Message = "Usuario registrado correctamente." });
             }
-            catch
+            catch (System.Exception ex)
             {
-                return null;
+                return BadRequest(new { Message = ex.Message });
             }
+        }
+
+        // Login normal
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginRequest request)
+        {
+            // Normalizar el email para la búsqueda
+            var normalizedEmail = request.Email.ToLowerInvariant();
+            
+            var user = await _userService.GetUserByEmailAsync(normalizedEmail);
+            // Log para depuración
+            Console.WriteLine(user == null 
+                ? "Usuario no encontrado"
+                : $"Usuario encontrado: {user.Email}, Password: {user.Password}");
+            
+            // Verificar la contraseña utilizando BCrypt
+            if (user == null || !_userService.VerifyPassword(request.Password, user.Password))
+            {
+                return Unauthorized(new { Message = "Credenciales incorrectas." });
+            }
+
+            return Ok(new
+            {
+                user.UserID,
+                user.Nombre,
+                user.Email,
+                user.PictureUrl,
+                user.Roles
+            });
         }
     }
 
-    public class GoogleLoginRequest
+    public class RegisterRequest
     {
-        public string Token { get; set; }
+        public string Nombre { get; set; }
+        public string Email { get; set; }
+        public string Password { get; set; }
+    }
+
+    public class LoginRequest
+    {
+        public string Email { get; set; }
+        public string Password { get; set; }
     }
 }
