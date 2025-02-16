@@ -1,31 +1,25 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Programacion\\TFGS\\2DAW\\Restaurante\\Back\\Restaurante.csproj": {}
+    "C:\\Users\\PC\\Desktop\\Restaurante2\\back\\Restaurante.csproj": {}
   },
   "projects": {
-    "C:\\Programacion\\TFGS\\2DAW\\Restaurante\\Back\\Restaurante.csproj": {
+    "C:\\Users\\PC\\Desktop\\Restaurante2\\back\\Restaurante.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Programacion\\TFGS\\2DAW\\Restaurante\\Back\\Restaurante.csproj",
+        "projectUniqueName": "C:\\Users\\PC\\Desktop\\Restaurante2\\back\\Restaurante.csproj",
         "projectName": "Restaurante",
-        "projectPath": "C:\\Programacion\\TFGS\\2DAW\\Restaurante\\Back\\Restaurante.csproj",
-        "packagesPath": "C:\\Users\\gabri\\.nuget\\packages\\",
-        "outputPath": "C:\\Programacion\\TFGS\\2DAW\\Restaurante\\Back\\obj\\",
+        "projectPath": "C:\\Users\\PC\\Desktop\\Restaurante2\\back\\Restaurante.csproj",
+        "packagesPath": "C:\\Users\\PC\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\PC\\Desktop\\Restaurante2\\back\\obj\\",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\gabri\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "C:\\Users\\PC\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -43,8 +37,7 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        },
-        "SdkAnalysisLevel": "9.0.100"
+        }
       },
       "frameworks": {
         "net8.0": {
@@ -110,7 +103,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.101/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.404/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
