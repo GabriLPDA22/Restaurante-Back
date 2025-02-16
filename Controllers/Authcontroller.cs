@@ -54,17 +54,16 @@ namespace Restaurante.Controllers
             // Normalizar el email para la búsqueda
             var normalizedEmail = request.Email.ToLowerInvariant();
             
-            var user = await _userService.GetUserByEmailAsync(normalizedEmail);
-            // Log para depuración
-            Console.WriteLine(user == null 
+            var user = await _userService.GetUserByEmailAsync(request.Email);
+            Console.WriteLine(user == null
                 ? "Usuario no encontrado"
-                : $"Usuario encontrado: {user.Email}, Password: {user.Password}");
-            
-            // Verificar la contraseña utilizando BCrypt
-            if (user == null || !_userService.VerifyPassword(request.Password, user.Password))
+                : $"Usuario encontrado: {user.Email}, Hash: {user.Password}");
+            if (user != null)
             {
-                return Unauthorized(new { Message = "Credenciales incorrectas." });
+                bool verify = _userService.VerifyPassword(request.Password, user.Password);
+                Console.WriteLine($"Verificación: {verify}");
             }
+
 
             return Ok(new
             {
