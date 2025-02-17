@@ -1,4 +1,3 @@
-
 using Google.Apis.Auth;
 
 namespace CineAPI.Services.Interfaces
@@ -11,10 +10,10 @@ namespace CineAPI.Services.Interfaces
         Task<Users?> GetUserByIdAsync(int userId);
         Task<Users?> GetUserByEmailAsync(string email);
         Task UpdateUserAsync(Users user);
-
         Task<Users?> GetUserByGoogleIdAsync(string googleId);
-
-        // Modificado para aceptar un payload de Google
-        Task<Users> GetOrCreateUserAsync(GoogleJsonWebSignature.Payload payload); 
+        // Para Google OAuth:
+        Task<Users> GetOrCreateUserAsync(GoogleJsonWebSignature.Payload payload);
+        string HashPassword(string password);
+        bool VerifyPassword(string password, string hashedPassword);
     }
 }

@@ -1,5 +1,7 @@
 using Npgsql;
 using CineAPI.Repositories.Interfaces;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace CineAPI.Repositories
 {
@@ -14,18 +16,24 @@ namespace CineAPI.Repositories
 
         public async Task AddAsync(Users user)
         {
+            if (user.Roles == null || user.Roles.Length == 0)
+            {
+                user.Roles = new string[] { "User" };
+            }
+
             using var connection = new NpgsqlConnection(_connectionString);
             await connection.OpenAsync();
 
-            var query = "INSERT INTO Users (Nombre, Correo, Password, Roles, GoogleId, PictureUrl) VALUES (@Nombre, @Correo, @Password, @Roles, @GoogleId, @PictureUrl)";
+            var query = "INSERT INTO Users (Nombre, Email, Password, Roles, GoogleId, PictureUrl) " +
+                        "VALUES (@Nombre, @Email, @Password, @Roles, @GoogleId, @PictureUrl)";
             using var command = new NpgsqlCommand(query, connection);
 
             command.Parameters.AddWithValue("@Nombre", user.Nombre);
-            command.Parameters.AddWithValue("@Correo", user.Correo);
-            command.Parameters.AddWithValue("@Password", user.Password);
-            command.Parameters.AddWithValue("@Roles", user.Roles); // Inserta Roles como un array
-            command.Parameters.AddWithValue("@GoogleId", user.GoogleId); // Inserta GoogleId
-            command.Parameters.AddWithValue("@PictureUrl", user.PictureUrl); // Inserta PictureUrl
+            command.Parameters.AddWithValue("@Email", user.Email);
+            command.Parameters.Add("@Password", NpgsqlTypes.NpgsqlDbType.Text).Value = (object?)user.Password ?? DBNull.Value;
+            command.Parameters.AddWithValue("@Roles", user.Roles);
+            command.Parameters.Add("@GoogleId", NpgsqlTypes.NpgsqlDbType.Text).Value = (object?)user.GoogleId ?? DBNull.Value;
+            command.Parameters.Add("@PictureUrl", NpgsqlTypes.NpgsqlDbType.Text).Value = (object?)user.PictureUrl ?? DBNull.Value;
 
             await command.ExecuteNonQueryAsync();
         }
@@ -59,9 +67,9 @@ namespace CineAPI.Repositories
                 {
                     UserID = reader.GetInt32(reader.GetOrdinal("UserID")),
                     Nombre = reader.GetString(reader.GetOrdinal("Nombre")),
-                    Correo = reader.GetString(reader.GetOrdinal("Correo")),
+                    Email = reader.GetString(reader.GetOrdinal("Email")),
                     Password = reader.GetString(reader.GetOrdinal("Password")),
-                    Roles = reader.GetFieldValue<string[]>(reader.GetOrdinal("Roles")),
+                    Roles = reader.IsDBNull(reader.GetOrdinal("Roles")) ? new string[] { } : reader.GetFieldValue<string[]>(reader.GetOrdinal("Roles")),
                     GoogleId = reader.IsDBNull(reader.GetOrdinal("GoogleId")) ? null : reader.GetString(reader.GetOrdinal("GoogleId")),
                     PictureUrl = reader.IsDBNull(reader.GetOrdinal("PictureUrl")) ? null : reader.GetString(reader.GetOrdinal("PictureUrl"))
                 });
@@ -87,9 +95,9 @@ namespace CineAPI.Repositories
                 {
                     UserID = reader.GetInt32(reader.GetOrdinal("UserID")),
                     Nombre = reader.GetString(reader.GetOrdinal("Nombre")),
-                    Correo = reader.GetString(reader.GetOrdinal("Correo")),
+                    Email = reader.GetString(reader.GetOrdinal("Email")),
                     Password = reader.GetString(reader.GetOrdinal("Password")),
-                    Roles = reader.GetFieldValue<string[]>(reader.GetOrdinal("Roles")),
+                    Roles = reader.IsDBNull(reader.GetOrdinal("Roles")) ? new string[] { } : reader.GetFieldValue<string[]>(reader.GetOrdinal("Roles")),
                     GoogleId = reader.IsDBNull(reader.GetOrdinal("GoogleId")) ? null : reader.GetString(reader.GetOrdinal("GoogleId")),
                     PictureUrl = reader.IsDBNull(reader.GetOrdinal("PictureUrl")) ? null : reader.GetString(reader.GetOrdinal("PictureUrl"))
                 };
@@ -103,10 +111,10 @@ namespace CineAPI.Repositories
             using var connection = new NpgsqlConnection(_connectionString);
             await connection.OpenAsync();
 
-            var query = "SELECT * FROM Users WHERE Correo = @Correo";
+            var query = "SELECT * FROM Users WHERE Email = @Email";
             using var command = new NpgsqlCommand(query, connection);
 
-            command.Parameters.AddWithValue("@Correo", email);
+            command.Parameters.AddWithValue("@Email", email);
 
             using var reader = await command.ExecuteReaderAsync();
             if (await reader.ReadAsync())
@@ -115,9 +123,9 @@ namespace CineAPI.Repositories
                 {
                     UserID = reader.GetInt32(reader.GetOrdinal("UserID")),
                     Nombre = reader.GetString(reader.GetOrdinal("Nombre")),
-                    Correo = reader.GetString(reader.GetOrdinal("Correo")),
+                    Email = reader.GetString(reader.GetOrdinal("Email")),
                     Password = reader.GetString(reader.GetOrdinal("Password")),
-                    Roles = reader.GetFieldValue<string[]>(reader.GetOrdinal("Roles")),
+                    Roles = reader.IsDBNull(reader.GetOrdinal("Roles")) ? new string[] { } : reader.GetFieldValue<string[]>(reader.GetOrdinal("Roles")),
                     GoogleId = reader.IsDBNull(reader.GetOrdinal("GoogleId")) ? null : reader.GetString(reader.GetOrdinal("GoogleId")),
                     PictureUrl = reader.IsDBNull(reader.GetOrdinal("PictureUrl")) ? null : reader.GetString(reader.GetOrdinal("PictureUrl"))
                 };
@@ -131,16 +139,17 @@ namespace CineAPI.Repositories
             using var connection = new NpgsqlConnection(_connectionString);
             await connection.OpenAsync();
 
-            var query = "UPDATE Users SET Nombre = @Nombre, Correo = @Correo, Password = @Password, Roles = @Roles, GoogleId = @GoogleId, PictureUrl = @PictureUrl WHERE UserID = @UserID";
+            var query = "UPDATE Users SET Nombre = @Nombre, Email = @Email, Password = @Password, Roles = @Roles, GoogleId = @GoogleId, PictureUrl = @PictureUrl " +
+                        "WHERE UserID = @UserID";
             using var command = new NpgsqlCommand(query, connection);
 
             command.Parameters.AddWithValue("@UserID", user.UserID);
             command.Parameters.AddWithValue("@Nombre", user.Nombre);
-            command.Parameters.AddWithValue("@Correo", user.Correo);
-            command.Parameters.AddWithValue("@Password", user.Password);
+            command.Parameters.AddWithValue("@Email", user.Email);
+            command.Parameters.Add("@Password", NpgsqlTypes.NpgsqlDbType.Text).Value = (object?)user.Password ?? DBNull.Value;
             command.Parameters.AddWithValue("@Roles", user.Roles);
-            command.Parameters.AddWithValue("@GoogleId", user.GoogleId); // Actualiza GoogleId
-            command.Parameters.AddWithValue("@PictureUrl", user.PictureUrl); // Actualiza PictureUrl
+            command.Parameters.Add("@GoogleId", NpgsqlTypes.NpgsqlDbType.Text).Value = (object?)user.GoogleId ?? DBNull.Value;
+            command.Parameters.Add("@PictureUrl", NpgsqlTypes.NpgsqlDbType.Text).Value = (object?)user.PictureUrl ?? DBNull.Value;
 
             await command.ExecuteNonQueryAsync();
         }
@@ -153,7 +162,7 @@ namespace CineAPI.Repositories
             var query = "SELECT * FROM Users WHERE GoogleId = @GoogleId";
             using var command = new NpgsqlCommand(query, connection);
 
-            command.Parameters.AddWithValue("@GoogleId", googleId);
+            command.Parameters.Add("@GoogleId", NpgsqlTypes.NpgsqlDbType.Text).Value = (object?)googleId ?? DBNull.Value;
 
             using var reader = await command.ExecuteReaderAsync();
             if (await reader.ReadAsync())
@@ -162,9 +171,9 @@ namespace CineAPI.Repositories
                 {
                     UserID = reader.GetInt32(reader.GetOrdinal("UserID")),
                     Nombre = reader.GetString(reader.GetOrdinal("Nombre")),
-                    Correo = reader.GetString(reader.GetOrdinal("Correo")),
+                    Email = reader.GetString(reader.GetOrdinal("Email")),
                     Password = reader.GetString(reader.GetOrdinal("Password")),
-                    Roles = reader.GetFieldValue<string[]>(reader.GetOrdinal("Roles")),
+                    Roles = reader.IsDBNull(reader.GetOrdinal("Roles")) ? new string[] { } : reader.GetFieldValue<string[]>(reader.GetOrdinal("Roles")),
                     GoogleId = reader.IsDBNull(reader.GetOrdinal("GoogleId")) ? null : reader.GetString(reader.GetOrdinal("GoogleId")),
                     PictureUrl = reader.IsDBNull(reader.GetOrdinal("PictureUrl")) ? null : reader.GetString(reader.GetOrdinal("PictureUrl"))
                 };
@@ -172,7 +181,5 @@ namespace CineAPI.Repositories
 
             return null;
         }
-
-
     }
 }
