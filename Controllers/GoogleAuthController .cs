@@ -38,9 +38,9 @@ namespace Restaurante.Controllers
                     user.Roles
                 });
             }
-            catch
+            catch(Exception ex)
             {
-                return BadRequest(new { Message = "Token de Google no válido." });
+                return BadRequest(new { message = ex.Message });
             }
         }
     }
