@@ -40,6 +40,8 @@ if (databaseProvider == "PostgreSQL")
 builder.Services.AddScoped<IProductosService, ProductosService>();
 builder.Services.AddScoped<IUserRepository>(provider => new UserRepository(postgresConnection)); // ✅ Pasamos la conexión correctamente
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IPedidoRepository>(provider => new PedidoRepository(postgresConnection));
+builder.Services.AddScoped<IPedidoService, PedidoService>();
 
 // **✅ Configuración de CORS corregida**
 builder.Services.AddCors(options =>
