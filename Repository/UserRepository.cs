@@ -68,7 +68,7 @@ namespace CineAPI.Repositories
                     UserID = reader.GetInt32(reader.GetOrdinal("UserID")),
                     Nombre = reader.GetString(reader.GetOrdinal("Nombre")),
                     Email = reader.GetString(reader.GetOrdinal("Email")),
-                    Password = reader.GetString(reader.GetOrdinal("Password")),
+                    Password = reader.IsDBNull(reader.GetOrdinal("Password")) ? null : reader.GetString(reader.GetOrdinal("Password")),
                     Roles = reader.IsDBNull(reader.GetOrdinal("Roles")) ? new string[] { } : reader.GetFieldValue<string[]>(reader.GetOrdinal("Roles")),
                     GoogleId = reader.IsDBNull(reader.GetOrdinal("GoogleId")) ? null : reader.GetString(reader.GetOrdinal("GoogleId")),
                     PictureUrl = reader.IsDBNull(reader.GetOrdinal("PictureUrl")) ? null : reader.GetString(reader.GetOrdinal("PictureUrl"))
@@ -96,7 +96,7 @@ namespace CineAPI.Repositories
                     UserID = reader.GetInt32(reader.GetOrdinal("UserID")),
                     Nombre = reader.GetString(reader.GetOrdinal("Nombre")),
                     Email = reader.GetString(reader.GetOrdinal("Email")),
-                    Password = reader.GetString(reader.GetOrdinal("Password")),
+                    Password = reader.IsDBNull(reader.GetOrdinal("Password")) ? null : reader.GetString(reader.GetOrdinal("Password")),
                     Roles = reader.IsDBNull(reader.GetOrdinal("Roles")) ? new string[] { } : reader.GetFieldValue<string[]>(reader.GetOrdinal("Roles")),
                     GoogleId = reader.IsDBNull(reader.GetOrdinal("GoogleId")) ? null : reader.GetString(reader.GetOrdinal("GoogleId")),
                     PictureUrl = reader.IsDBNull(reader.GetOrdinal("PictureUrl")) ? null : reader.GetString(reader.GetOrdinal("PictureUrl"))
@@ -124,7 +124,7 @@ namespace CineAPI.Repositories
                     UserID = reader.GetInt32(reader.GetOrdinal("UserID")),
                     Nombre = reader.GetString(reader.GetOrdinal("Nombre")),
                     Email = reader.GetString(reader.GetOrdinal("Email")),
-                    Password = reader.GetString(reader.GetOrdinal("Password")),
+                    Password = reader.IsDBNull(reader.GetOrdinal("Password")) ? null : reader.GetString(reader.GetOrdinal("Password")),
                     Roles = reader.IsDBNull(reader.GetOrdinal("Roles")) ? new string[] { } : reader.GetFieldValue<string[]>(reader.GetOrdinal("Roles")),
                     GoogleId = reader.IsDBNull(reader.GetOrdinal("GoogleId")) ? null : reader.GetString(reader.GetOrdinal("GoogleId")),
                     PictureUrl = reader.IsDBNull(reader.GetOrdinal("PictureUrl")) ? null : reader.GetString(reader.GetOrdinal("PictureUrl"))
