@@ -1,0 +1,25 @@
+public class UserDTO
+{
+    public int UserID { get; set; }
+    public string Nombre { get; set; }
+    public string Email { get; set; }
+    public string? GoogleId { get; set; }
+    public string? PictureUrl { get; set; }
+    public string[] Roles { get; set; }
+
+    public UserDTO(int userId, string nombre, string email, string? googleId, string? pictureUrl, string[] roles)
+    {
+        UserID = userId;
+        Nombre = nombre;
+        Email = email;
+        GoogleId = googleId;
+        PictureUrl = pictureUrl;
+        Roles = roles;
+    }
+
+    // Método para convertir de Users a UserDTO
+    public static UserDTO FromUser(Users user)
+    {
+        return new UserDTO(user.UserID, user.Nombre, user.Email, user.GoogleId, user.PictureUrl, user.Roles);
+    }
+}
