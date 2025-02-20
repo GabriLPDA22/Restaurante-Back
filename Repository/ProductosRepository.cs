@@ -24,10 +24,10 @@ namespace Restaurante.Repositories
                 await connection.OpenAsync();
                 string query = @"
                     INSERT INTO Productos (
-                        Nombre, Descripcion, Precio, ImagenUrl, Categorias, Cantidad
+                        Nombre, Descripcion, Precio, ImagenUrl, Categorias, Cantidad, Alergenos
                     ) 
                     VALUES (
-                        @Nombre, @Descripcion, @Precio, @ImagenUrl, @Categorias, @Cantidad
+                        @Nombre, @Descripcion, @Precio, @ImagenUrl, @Categorias, @Cantidad, @Alergenos
                     )";
                 using (var command = new NpgsqlCommand(query, connection))
                 {
@@ -37,6 +37,7 @@ namespace Restaurante.Repositories
                     command.Parameters.AddWithValue("@ImagenUrl", producto.ImagenUrl);
                     command.Parameters.AddWithValue("@Categorias", producto.Categorias);
                     command.Parameters.AddWithValue("@Cantidad", producto.Cantidad);
+                    command.Parameters.AddWithValue("@Alergenos", producto.Alergenos);
                     await command.ExecuteNonQueryAsync();
                 }
             }
@@ -62,7 +63,7 @@ namespace Restaurante.Repositories
             using (var connection = new NpgsqlConnection(_connectionString))
             {
                 await connection.OpenAsync();
-                string query = "SELECT Id, Nombre, Descripcion, Precio, ImagenUrl, Categorias, Cantidad FROM Productos";
+                string query = "SELECT Id, Nombre, Descripcion, Precio, ImagenUrl, Categorias, Cantidad, Alergenos FROM Productos";
                 using (var command = new NpgsqlCommand(query, connection))
                 using (var reader = await command.ExecuteReaderAsync())
                 {
@@ -76,7 +77,8 @@ namespace Restaurante.Repositories
                             Precio = reader.GetDecimal(3),
                             ImagenUrl = reader.GetString(4),
                             Categorias = reader[5] as List<string> ?? new List<string>(),
-                            Cantidad = reader.GetInt32(6)
+                            Cantidad = reader.GetInt32(6),
+                            Alergenos = reader[7] as List<string> ?? new List<string>()
                         });
                     }
                 }
@@ -90,7 +92,7 @@ namespace Restaurante.Repositories
             using (var connection = new NpgsqlConnection(_connectionString))
             {
                 await connection.OpenAsync();
-                string query = "SELECT Id, Nombre, Descripcion, Precio, ImagenUrl, Categorias, Cantidad FROM Productos WHERE Id = @Id";
+                string query = "SELECT Id, Nombre, Descripcion, Precio, ImagenUrl, Categorias, Cantidad, Alergenos FROM Productos WHERE Id = @Id";
                 using (var command = new NpgsqlCommand(query, connection))
                 {
                     command.Parameters.AddWithValue("@Id", productoID);
@@ -106,7 +108,8 @@ namespace Restaurante.Repositories
                                 Precio = reader.GetDecimal(3),
                                 ImagenUrl = reader.GetString(4),
                                 Categorias = reader[5] as List<string> ?? new List<string>(),
-                                Cantidad = reader.GetInt32(6)
+                                Cantidad = reader.GetInt32(6),
+                                Alergenos = reader[7] as List<string> ?? new List<string>()
                             };
                         }
                     }
@@ -128,6 +131,7 @@ namespace Restaurante.Repositories
                         ImagenUrl = @ImagenUrl, 
                         Categorias = @Categorias, 
                         Cantidad = @Cantidad
+                        Alergenos = @Alergenos
                     WHERE Id = @Id";
                 using (var command = new NpgsqlCommand(query, connection))
                 {
@@ -137,6 +141,7 @@ namespace Restaurante.Repositories
                     command.Parameters.AddWithValue("@ImagenUrl", producto.ImagenUrl);
                     command.Parameters.AddWithValue("@Categorias", producto.Categorias);
                     command.Parameters.AddWithValue("@Cantidad", producto.Cantidad);
+                    command.Parameters.AddWithValue("@Alergenos", producto.Alergenos);
                     command.Parameters.AddWithValue("@Id", producto.Id);
                     await command.ExecuteNonQueryAsync();
                 }
