@@ -76,41 +76,5 @@ namespace CineAPI.Controllers
             }
         }
 
-        [HttpGet("me")]
-        public async Task<IActionResult> GetCurrentUser()
-        {
-            if (User.Identity == null || !User.Identity.IsAuthenticated)
-            {
-                return Unauthorized(new { Message = "User not authenticated." });
-            }
-
-            // 🔍 DEBUG: Ver qué claims llegan
-            foreach (var claim in User.Claims)
-            {
-                Console.WriteLine($"{claim.Type}: {claim.Value}");
-            }
-
-            var googleId = User.FindFirst("sub")?.Value; // Google ID del token
-            if (string.IsNullOrEmpty(googleId))
-            {
-                return Unauthorized(new { Message = "User not authenticated." });
-            }
-
-            var user = await _userService.GetUserByGoogleIdAsync(googleId);
-            if (user == null)
-            {
-                return NotFound(new { Message = "User not found." });
-            }
-
-            return Ok(new
-            {
-                user.UserID,
-                user.Nombre,
-                user.Correo,
-                user.PictureUrl,
-                user.Roles
-            });
-        }
-
     }
 }
