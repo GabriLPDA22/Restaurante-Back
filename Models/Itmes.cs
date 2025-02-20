@@ -1,4 +1,4 @@
-public class Detalle
+public class Items
 {
     public int IdDetalle { get; set; }
     public int IdPedidos { get; set; }
@@ -6,7 +6,7 @@ public class Detalle
     public int Cantidad { get; set; }
     public decimal Precio { get; set; }
 
-    public Detalle(int idDetalle, int idPedidos, int idProducto, int cantidad, decimal precio)
+    public Items(int idDetalle, int idPedidos, int idProducto, int cantidad, decimal precio)
     {
         IdDetalle = idDetalle;
         IdPedidos = idPedidos;
@@ -14,5 +14,5 @@ public class Detalle
         Cantidad = cantidad;
         Precio = precio;
     }
-    public Detalle() { }
+    public Items() { }
 }
