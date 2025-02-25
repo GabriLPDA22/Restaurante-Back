@@ -63,27 +63,27 @@ namespace Restaurante.Repositories
         }
 
         public async Task<bool> AddAsync(Reservation reservation)
-{
-    using var connection = new NpgsqlConnection(_connectionString);
-    await connection.OpenAsync();
+        {
+            using var connection = new NpgsqlConnection(_connectionString);
+            await connection.OpenAsync();
 
-    using var command = new NpgsqlCommand(
-        "INSERT INTO reservations (datetime, customername, tableid) VALUES (@DateTime, @CustomerName, @TableId) RETURNING id", 
-        connection);
-    command.Parameters.AddWithValue("@DateTime", reservation.DateTime);
-    command.Parameters.AddWithValue("@CustomerName", reservation.CustomerName);
-    command.Parameters.AddWithValue("@TableId", reservation.TableId);
+            using var command = new NpgsqlCommand(
+                "INSERT INTO reservations (datetime, customername, tableid) VALUES (@DateTime, @CustomerName, @TableId) RETURNING id",
+                connection);
+            command.Parameters.AddWithValue("@DateTime", reservation.DateTime);
+            command.Parameters.AddWithValue("@CustomerName", reservation.CustomerName);
+            command.Parameters.AddWithValue("@TableId", reservation.TableId);
 
-    // Obtener el ID generado automáticamente
-    var newId = await command.ExecuteScalarAsync();
-    if (newId != null)
-    {
-        reservation.Id = Convert.ToInt32(newId);
-        return true;
-    }
+            // Obtener el ID generado automáticamente
+            var newId = await command.ExecuteScalarAsync();
+            if (newId != null)
+            {
+                reservation.Id = Convert.ToInt32(newId);
+                return true;
+            }
 
-    return false;
-}
+            return false;
+        }
 
         public async Task<bool> UpdateAsync(Reservation reservation)
         {
@@ -91,7 +91,7 @@ namespace Restaurante.Repositories
             await connection.OpenAsync();
 
             using var command = new NpgsqlCommand(
-                "UPDATE reservations SET datetime = @DateTime, customername = @CustomerName, tableid = @TableId WHERE id = @Id", 
+                "UPDATE reservations SET datetime = @DateTime, customername = @CustomerName, tableid = @TableId WHERE id = @Id",
                 connection);
             command.Parameters.AddWithValue("@DateTime", reservation.DateTime);
             command.Parameters.AddWithValue("@CustomerName", reservation.CustomerName);
