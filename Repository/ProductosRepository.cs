@@ -76,7 +76,7 @@ namespace Restaurante.Repositories
                             Precio = reader.GetDecimal(3),
                             ImagenUrl = reader.GetString(4),
                             Categorias = reader[5] as List<string> ?? new List<string>(),
-                            Alergenos = reader[7] as List<string> ?? new List<string>()
+                            Alergenos = reader[6] as List<string> ?? new List<string>()
                         });
                     }
                 }
@@ -106,7 +106,7 @@ namespace Restaurante.Repositories
                                 Precio = reader.GetDecimal(3),
                                 ImagenUrl = reader.GetString(4),
                                 Categorias = reader[5] as List<string> ?? new List<string>(),
-                                Alergenos = reader[7] as List<string> ?? new List<string>()
+                                Alergenos = reader[6] as List<string> ?? new List<string>()
                             };
                         }
                     }
