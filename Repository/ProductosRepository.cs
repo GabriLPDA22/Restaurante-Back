@@ -35,8 +35,8 @@ namespace Restaurante.Repositories
                     command.Parameters.AddWithValue("@Descripcion", producto.Descripcion);
                     command.Parameters.AddWithValue("@Precio", producto.Precio);
                     command.Parameters.AddWithValue("@ImagenUrl", producto.ImagenUrl);
-                    command.Parameters.AddWithValue("@Categorias", producto.Categorias);
-                    command.Parameters.AddWithValue("@Alergenos", producto.Alergenos);
+                    command.Parameters.AddWithValue("@Categorias", producto.Categorias ?? new List<string>());
+                    command.Parameters.AddWithValue("@Alergenos", producto.Alergenos ?? new List<string>());
                     await command.ExecuteNonQueryAsync();
                 }
             }
@@ -68,16 +68,53 @@ namespace Restaurante.Repositories
                 {
                     while (await reader.ReadAsync())
                     {
-                        productos.Add(new Productos
+                        var producto = new Productos
                         {
                             Id = reader.GetInt32(0),
                             Nombre = reader.GetString(1),
                             Descripcion = reader.GetString(2),
                             Precio = reader.GetDecimal(3),
                             ImagenUrl = reader.GetString(4),
-                            Categorias = reader[5] as List<string> ?? new List<string>(),
-                            Alergenos = reader[6] as List<string> ?? new List<string>()
-                        });
+                            // Inicializar las listas vacías para evitar nulos
+                            Categorias = new List<string>(),
+                            Alergenos = new List<string>()
+                        };
+
+                        // Para Categorias
+                        if (!reader.IsDBNull(5))
+                        {
+                            try 
+                            {
+                                // Intentar convertir directamente el valor a array de string
+                                if (reader.GetValue(5) is string[] categoriasArray)
+                                {
+                                    producto.Categorias = categoriasArray.ToList();
+                                }
+                            }
+                            catch 
+                            {
+                                // Si falla, dejamos la lista vacía
+                            }
+                        }
+
+                        // Para Alergenos
+                        if (!reader.IsDBNull(6))
+                        {
+                            try 
+                            {
+                                // Intentar convertir directamente el valor a array de string
+                                if (reader.GetValue(6) is string[] alergenosArray)
+                                {
+                                    producto.Alergenos = alergenosArray.ToList();
+                                }
+                            }
+                            catch 
+                            {
+                                // Si falla, dejamos la lista vacía
+                            }
+                        }
+
+                        productos.Add(producto);
                     }
                 }
             }
@@ -105,9 +142,44 @@ namespace Restaurante.Repositories
                                 Descripcion = reader.GetString(2),
                                 Precio = reader.GetDecimal(3),
                                 ImagenUrl = reader.GetString(4),
-                                Categorias = reader[5] as List<string> ?? new List<string>(),
-                                Alergenos = reader[6] as List<string> ?? new List<string>()
+                                // Inicializar las listas vacías para evitar nulos
+                                Categorias = new List<string>(),
+                                Alergenos = new List<string>()
                             };
+
+                            // Para Categorias
+                            if (!reader.IsDBNull(5))
+                            {
+                                try 
+                                {
+                                    // Intentar convertir directamente el valor a array de string
+                                    if (reader.GetValue(5) is string[] categoriasArray)
+                                    {
+                                        producto.Categorias = categoriasArray.ToList();
+                                    }
+                                }
+                                catch 
+                                {
+                                    // Si falla, dejamos la lista vacía
+                                }
+                            }
+
+                            // Para Alergenos
+                            if (!reader.IsDBNull(6))
+                            {
+                                try 
+                                {
+                                    // Intentar convertir directamente el valor a array de string
+                                    if (reader.GetValue(6) is string[] alergenosArray)
+                                    {
+                                        producto.Alergenos = alergenosArray.ToList();
+                                    }
+                                }
+                                catch 
+                                {
+                                    // Si falla, dejamos la lista vacía
+                                }
+                            }
                         }
                     }
                 }
@@ -135,8 +207,8 @@ namespace Restaurante.Repositories
                     command.Parameters.AddWithValue("@Descripcion", producto.Descripcion);
                     command.Parameters.AddWithValue("@Precio", producto.Precio);
                     command.Parameters.AddWithValue("@ImagenUrl", producto.ImagenUrl);
-                    command.Parameters.AddWithValue("@Categorias", producto.Categorias);
-                    command.Parameters.AddWithValue("@Alergenos", producto.Alergenos);
+                    command.Parameters.AddWithValue("@Categorias", producto.Categorias ?? new List<string>());
+                    command.Parameters.AddWithValue("@Alergenos", producto.Alergenos ?? new List<string>());
                     command.Parameters.AddWithValue("@Id", producto.Id);
                     await command.ExecuteNonQueryAsync();
                 }
