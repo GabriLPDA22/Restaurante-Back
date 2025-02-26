@@ -20,9 +20,30 @@ namespace Restaurante.Services
             await _productosRepository.AddAsync(producto);
         }
 
-        public Task CreatePorductoAsync(Productos porducto)
+        public async Task<IEnumerable<Productos>> GetAllProductosAsync()
         {
-            throw new NotImplementedException();
+            // Implementación del método para obtener todos los productos
+            return await _productosRepository.GetAllAsync();
+        }
+
+        public async Task<Productos?> GetProductoByIdAsync(int productoID)
+        {
+            // Implementación del método para obtener un producto por ID
+            return await _productosRepository.GetByIdAsync(productoID);
+        }
+
+        public async Task UpdateProductoAsync(Productos producto)
+        {
+            // Validaciones antes de actualizar
+            ValidateProducto(producto);
+            
+            var existingProducto = await _productosRepository.GetByIdAsync(producto.Id);
+            if (existingProducto == null)
+            {
+                throw new KeyNotFoundException($"No se encontró el producto con ID {producto.Id}");
+            }
+
+            await _productosRepository.UpdateAsync(producto);
         }
 
         public async Task DeleteProductoAsync(int productoID)
@@ -36,24 +57,20 @@ namespace Restaurante.Services
             await _productosRepository.DeleteAsync(productoID);
         }
 
-        public Task<IEnumerable<Productos>> GetAllProductosAsync()
+        // Este método parece estar duplicado y mal escrito (Porducto en lugar de Producto)
+        // Se puede eliminar o corregir según sea necesario
+        public Task CreatePorductoAsync(Productos porducto)
         {
-            throw new NotImplementedException();
+            // Redirigimos al método correcto
+            return AddProductoAsync(porducto);
         }
 
-        public Task<Productos?> GetProductoByIdAsync(int productoID)
-        {
-            throw new NotImplementedException();
-        }
-
+        // Este método también parece estar duplicado y mal escrito
+        // Se puede eliminar o corregir según sea necesario
         public Task UpdatePorductoAsync(Productos porducto)
         {
-            throw new NotImplementedException();
-        }
-
-        public Task UpdateProductoAsync(Productos producto)
-        {
-            throw new NotImplementedException();
+            // Redirigimos al método correcto
+            return UpdateProductoAsync(porducto);
         }
 
         // Método de validación para productos
