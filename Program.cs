@@ -33,10 +33,10 @@ if (databaseProvider == "PostgreSQL")
 builder.Services.AddScoped<IProductosService, ProductosService>();
 builder.Services.AddScoped<IUserRepository>(provider => new UserRepository(postgresConnection));
 builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IReservationRepository>(provider =>
-    new ReservationRepository(postgresConnection));
-
-builder.Services.AddScoped<IReservationService, ReservationService>();
+builder.Services.AddScoped<IPedidoRepository>(provider => new PedidoRepository(postgresConnection));
+builder.Services.AddScoped<IPedidoService, PedidoService>();
+builder.Services.AddScoped<IItemsRepository>(provider => new ItemsRepository(postgresConnection));
+builder.Services.AddScoped<IItemsService, ItemsService>();
 
 builder.Services.AddCors(options =>
 {
