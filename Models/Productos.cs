@@ -6,6 +6,5 @@ public class Productos
     public decimal Precio { get; set; }
     public string ImagenUrl { get; set; }
     public List<string> Categorias { get; set; }
-    public int Cantidad { get; set; }
     public List<string> Alergenos { get; set; } 
 }
