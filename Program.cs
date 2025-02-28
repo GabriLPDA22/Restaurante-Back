@@ -35,6 +35,9 @@ builder.Services.AddScoped<IUserRepository>(provider => new UserRepository(postg
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IReservationRepository>(provider =>
     new ReservationRepository(postgresConnection));
+builder.Services.AddScoped<IPedidoService, PedidoService>();
+builder.Services.AddScoped<IPedidoRepository>(provider =>
+    new PedidoRepository(postgresConnection));    
 
 builder.Services.AddScoped<IReservationService, ReservationService>();
 
