@@ -1,5 +1,6 @@
 using Restaurante.Repositories.Interfaces;
 using Restaurante.Services.Interfaces;
+using System.Collections.Generic;
 
 namespace Restaurante.Services
 {
@@ -22,8 +23,24 @@ namespace Restaurante.Services
             return _pedidoRepository.GetById(id);
         }
 
+        public IEnumerable<Pedido> GetByUserId(int userId)
+        {
+            return _pedidoRepository.GetByUserId(userId);
+        }
+
+        public object GetItemsByPedidoId(int pedidoId)
+        {
+            return _pedidoRepository.GetItemsByPedidoId(pedidoId);
+        }
+
         public void Add(Pedido pedido)
         {
+            // Asegúrate de que la fecha se establezca si no está definida
+            if (pedido.Fecha == default)
+            {
+                pedido.Fecha = DateTime.Now;
+            }
+            
             _pedidoRepository.Add(pedido);
         }
 

@@ -5,127 +5,262 @@ using System.Data;
 
 namespace Restaurante.Repositories
 {
-	public class PedidoRepository : IPedidoRepository
-	{
-		private readonly string _connectionString;
-
-		public PedidoRepository(string connectionString)
-		{
-			_connectionString = connectionString;
-		}
-
-		public IEnumerable<Pedido> GetAll()
-		{
-			var pedidos = new List<Pedido>();
-			using (var connection = new NpgsqlConnection(_connectionString))
-			{
-				connection.Open();
-				using (var command = new NpgsqlCommand("SELECT * FROM pedidos", connection))
-				{
-					using (var reader = command.ExecuteReader())
-					{
-						while (reader.Read())
-						{
-							var pedido = new Pedido
-							{
-								IdPedidos = reader.GetInt32(reader.GetOrdinal("id_pedidos")),
-								Fecha = reader.GetDateTime(reader.GetOrdinal("fecha")),
-								UserID = reader.GetInt32(reader.GetOrdinal("user_id"))
-							};
-							pedidos.Add(pedido);
-						}
-					}
-				}
-			}
-			return pedidos;
-		}
-
-		public Pedido GetById(int id)
-		{
-			Pedido pedido = null;
-			using (var connection = new NpgsqlConnection(_connectionString))
-			{
-				connection.Open();
-				using (var command = new NpgsqlCommand("SELECT * FROM pedidos WHERE id_pedidos = @Id", connection))
-				{
-					command.Parameters.AddWithValue("@Id", id);
-					using (var reader = command.ExecuteReader())
-					{
-						if (reader.Read())
-						{
-							pedido = new Pedido
-							{
-								IdPedidos = reader.GetInt32(reader.GetOrdinal("id_pedidos")),
-								Fecha = reader.GetDateTime(reader.GetOrdinal("fecha")),
-								UserID = reader.GetInt32(reader.GetOrdinal("user_id"))
-							};
-						}
-					}
-				}
-			}
-			return pedido;
-		}
-
-public void Add(Pedido pedido)
-{
-    // Verificar que el usuario existe usando el nombre correcto de la columna (userid)
-    bool userExists = false;
-    using (var connection = new NpgsqlConnection(_connectionString))
+    public class PedidoRepository : IPedidoRepository
     {
-        connection.Open();
-        using (var command = new NpgsqlCommand("SELECT COUNT(1) FROM users WHERE userid = @UserID", connection))
+        private readonly string _connectionString;
+
+        public PedidoRepository(string connectionString)
         {
-            command.Parameters.AddWithValue("@UserID", pedido.UserID);
-            userExists = Convert.ToInt64(command.ExecuteScalar()) > 0;
+            _connectionString = connectionString;
         }
-    }
-    
-    if (!userExists)
-    {
-        throw new InvalidOperationException($"El usuario con ID {pedido.UserID} no existe.");
-    }
 
-    // Insertar el pedido
-    using (var connection = new NpgsqlConnection(_connectionString))
-    {
-        connection.Open();
-        using (var command = new NpgsqlCommand("INSERT INTO pedidos (fecha, user_id) VALUES (@Fecha, @UserID) RETURNING id_pedidos", connection))
+        public IEnumerable<Pedido> GetAll()
         {
-            command.Parameters.AddWithValue("@Fecha", pedido.Fecha);
-            command.Parameters.AddWithValue("@UserID", pedido.UserID);
+            var pedidos = new List<Pedido>();
+            using (var connection = new NpgsqlConnection(_connectionString))
+            {
+                connection.Open();
+                using (var command = new NpgsqlCommand("SELECT * FROM pedidos", connection))
+                {
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            var pedido = new Pedido
+                            {
+                                IdPedidos = reader.GetInt32(reader.GetOrdinal("id_pedidos")),
+                                Fecha = reader.GetDateTime(reader.GetOrdinal("fecha")),
+                                UserID = reader.GetInt32(reader.GetOrdinal("user_id"))
+                            };
+                            pedidos.Add(pedido);
+                        }
+                    }
+                }
+            }
+
+            // Obtener los items para cada pedido
+            foreach (var pedido in pedidos)
+            {
+                pedido.Itmes = GetItemsByPedidoId(pedido.IdPedidos);
+            }
+
+            return pedidos;
+        }
+
+        public Pedido GetById(int id)
+        {
+            Pedido pedido = null;
+            using (var connection = new NpgsqlConnection(_connectionString))
+            {
+                connection.Open();
+                using (var command = new NpgsqlCommand("SELECT * FROM pedidos WHERE id_pedidos = @Id", connection))
+                {
+                    command.Parameters.AddWithValue("@Id", id);
+                    using (var reader = command.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            pedido = new Pedido
+                            {
+                                IdPedidos = reader.GetInt32(reader.GetOrdinal("id_pedidos")),
+                                Fecha = reader.GetDateTime(reader.GetOrdinal("fecha")),
+                                UserID = reader.GetInt32(reader.GetOrdinal("user_id"))
+                            };
+                        }
+                    }
+                }
+            }
+
+            if (pedido != null)
+            {
+                pedido.Itmes = GetItemsByPedidoId(pedido.IdPedidos);
+            }
+
+            return pedido;
+        }
+
+        public List<Items> GetItemsByPedidoId(int pedidoId)
+        {
+            var items = new List<Items>();
+            using (var connection = new NpgsqlConnection(_connectionString))
+            {
+                connection.Open();
+                using (var command = new NpgsqlCommand("SELECT * FROM items WHERE idpedidos = @PedidoId", connection))
+                {
+                    command.Parameters.AddWithValue("@PedidoId", pedidoId);
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            var item = new Items
+                            {
+                                IdDetalle = reader.GetInt32(reader.GetOrdinal("iddetalle")),
+                                IdPedidos = reader.GetInt32(reader.GetOrdinal("idpedidos")),
+                                IdProducto = reader.GetInt32(reader.GetOrdinal("idproducto")),
+                                Cantidad = reader.GetInt32(reader.GetOrdinal("cantidad")),
+                                Precio = reader.GetDecimal(reader.GetOrdinal("precio"))
+                            };
+                            items.Add(item);
+                        }
+                    }
+                }
+            }
+            return items;
+        }
+
+        public IEnumerable<Pedido> GetByUserId(int userId)
+        {
+            var pedidos = new List<Pedido>();
+            using (var connection = new NpgsqlConnection(_connectionString))
+            {
+                connection.Open();
+                using (var command = new NpgsqlCommand("SELECT * FROM pedidos WHERE user_id = @UserId ORDER BY fecha DESC", connection))
+                {
+                    command.Parameters.AddWithValue("@UserId", userId);
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            var pedido = new Pedido
+                            {
+                                IdPedidos = reader.GetInt32(reader.GetOrdinal("id_pedidos")),
+                                Fecha = reader.GetDateTime(reader.GetOrdinal("fecha")),
+                                UserID = reader.GetInt32(reader.GetOrdinal("user_id"))
+                            };
+                            pedidos.Add(pedido);
+                        }
+                    }
+                }
+            }
+
+            // Obtener los items para cada pedido
+            foreach (var pedido in pedidos)
+            {
+                pedido.Itmes = GetItemsByPedidoId(pedido.IdPedidos);
+            }
+
+            return pedidos;
+        }
+
+        public void Add(Pedido pedido)
+        {
+            // Verificar que el usuario existe
+            bool userExists = false;
+            using (var connection = new NpgsqlConnection(_connectionString))
+            {
+                connection.Open();
+                using (var command = new NpgsqlCommand("SELECT COUNT(1) FROM users WHERE userid = @UserID", connection))
+                {
+                    command.Parameters.AddWithValue("@UserID", pedido.UserID);
+                    userExists = Convert.ToInt64(command.ExecuteScalar()) > 0;
+                }
+            }
             
-            // Recuperar el ID generado
-            var id = (int)command.ExecuteScalar();
-            pedido.IdPedidos = id;
+            if (!userExists)
+            {
+                throw new InvalidOperationException($"El usuario con ID {pedido.UserID} no existe.");
+            }
+
+            using (var connection = new NpgsqlConnection(_connectionString))
+            {
+                connection.Open();
+                
+                // Usar transacción para asegurar la integridad de datos
+                using (var transaction = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        // Insertar el pedido
+                        using (var command = new NpgsqlCommand("INSERT INTO pedidos (fecha, user_id) VALUES (@Fecha, @UserID) RETURNING id_pedidos", connection, transaction))
+                        {
+                            command.Parameters.AddWithValue("@Fecha", pedido.Fecha);
+                            command.Parameters.AddWithValue("@UserID", pedido.UserID);
+                            
+                            // Recuperar el ID generado
+                            var id = (int)command.ExecuteScalar();
+                            pedido.IdPedidos = id;
+                        }
+
+                        // Insertar los items del pedido si existen
+                        if (pedido.Itmes != null && pedido.Itmes.Count > 0)
+                        {
+                            foreach (var item in pedido.Itmes)
+                            {
+                                item.IdPedidos = pedido.IdPedidos; // Asignar el ID del pedido a cada item
+                                
+                                using (var command = new NpgsqlCommand(
+                                    "INSERT INTO items (idpedidos, idproducto, cantidad, precio) VALUES (@IdPedidos, @IdProducto, @Cantidad, @Precio) RETURNING iddetalle", 
+                                    connection, transaction))
+                                {
+                                    command.Parameters.AddWithValue("@IdPedidos", item.IdPedidos);
+                                    command.Parameters.AddWithValue("@IdProducto", item.IdProducto);
+                                    command.Parameters.AddWithValue("@Cantidad", item.Cantidad);
+                                    command.Parameters.AddWithValue("@Precio", item.Precio);
+                                    
+                                    // Recuperar el ID generado para el item
+                                    item.IdDetalle = (int)command.ExecuteScalar();
+                                }
+                            }
+                        }
+
+                        transaction.Commit();
+                    }
+                    catch
+                    {
+                        transaction.Rollback();
+                        throw;
+                    }
+                }
+            }
+        }
+
+        public void Update(Pedido pedido)
+        {
+            using (var connection = new NpgsqlConnection(_connectionString))
+            {
+                connection.Open();
+                using (var command = new NpgsqlCommand("UPDATE pedidos SET fecha = @Fecha, user_id = @UserID WHERE id_pedidos = @Id", connection))
+                {
+                    command.Parameters.AddWithValue("@Id", pedido.IdPedidos);
+                    command.Parameters.AddWithValue("@Fecha", pedido.Fecha);
+                    command.Parameters.AddWithValue("@UserID", pedido.UserID);
+                    command.ExecuteNonQuery();
+                }
+            }
+        }
+
+        public void Delete(int id)
+        {
+            using (var connection = new NpgsqlConnection(_connectionString))
+            {
+                connection.Open();
+                using (var transaction = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        // Primero eliminar items asociados
+                        using (var command = new NpgsqlCommand("DELETE FROM items WHERE idpedidos = @Id", connection, transaction))
+                        {
+                            command.Parameters.AddWithValue("@Id", id);
+                            command.ExecuteNonQuery();
+                        }
+
+                        // Luego eliminar el pedido
+                        using (var command = new NpgsqlCommand("DELETE FROM pedidos WHERE id_pedidos = @Id", connection, transaction))
+                        {
+                            command.Parameters.AddWithValue("@Id", id);
+                            command.ExecuteNonQuery();
+                        }
+
+                        transaction.Commit();
+                    }
+                    catch
+                    {
+                        transaction.Rollback();
+                        throw;
+                    }
+                }
+            }
         }
     }
-}
-		public void Update(Pedido pedido)
-		{
-			using (var connection = new NpgsqlConnection(_connectionString))
-			{
-				connection.Open();
-				using (var command = new NpgsqlCommand("UPDATE pedidos SET fecha = @Fecha, user_id = @UserID WHERE id_pedidos = @Id", connection))
-				{
-					command.Parameters.AddWithValue("@Id", pedido.IdPedidos);
-					command.Parameters.AddWithValue("@Fecha", pedido.Fecha);
-					command.Parameters.AddWithValue("@UserID", pedido.UserID);
-					command.ExecuteNonQuery();
-				}
-			}
-		}
-
-		public void Delete(int id)
-		{
-			using (var connection = new NpgsqlConnection(_connectionString))
-			{
-				connection.Open();
-				using (var command = new NpgsqlCommand("DELETE FROM pedidos WHERE id_pedidos = @Id", connection))
-				{
-					command.Parameters.AddWithValue("@Id", id);
-					command.ExecuteNonQuery();
-				}
-			}
-		}
-	}
 }

@@ -24,8 +24,13 @@ namespace CineAPI.Repositories
             using var connection = new NpgsqlConnection(_connectionString);
             await connection.OpenAsync();
 
-            var query = "INSERT INTO Users (Nombre, Email, Password, Roles, GoogleId, PictureUrl) " +
-                        "VALUES (@Nombre, @Email, @Password, @Roles, @GoogleId, @PictureUrl)";
+            // Agregamos Telefono y FechaNacimiento
+            var query = @"
+                INSERT INTO Users
+                (Nombre, Email, Password, Roles, GoogleId, PictureUrl, Telefono, FechaNacimiento)
+                VALUES
+                (@Nombre, @Email, @Password, @Roles, @GoogleId, @PictureUrl, @Telefono, @FechaNacimiento)
+            ";
             using var command = new NpgsqlCommand(query, connection);
 
             command.Parameters.AddWithValue("@Nombre", user.Nombre);
@@ -34,6 +39,9 @@ namespace CineAPI.Repositories
             command.Parameters.AddWithValue("@Roles", user.Roles);
             command.Parameters.Add("@GoogleId", NpgsqlTypes.NpgsqlDbType.Text).Value = (object?)user.GoogleId ?? DBNull.Value;
             command.Parameters.Add("@PictureUrl", NpgsqlTypes.NpgsqlDbType.Text).Value = (object?)user.PictureUrl ?? DBNull.Value;
+            // Campos nuevos
+            command.Parameters.Add("@Telefono", NpgsqlTypes.NpgsqlDbType.Text).Value = (object?)user.Telefono ?? DBNull.Value;
+            command.Parameters.Add("@FechaNacimiento", NpgsqlTypes.NpgsqlDbType.Date).Value = (object?)user.FechaNacimiento ?? DBNull.Value;
 
             await command.ExecuteNonQueryAsync();
         }
@@ -71,7 +79,10 @@ namespace CineAPI.Repositories
                     Password = reader.IsDBNull(reader.GetOrdinal("Password")) ? null : reader.GetString(reader.GetOrdinal("Password")),
                     Roles = reader.IsDBNull(reader.GetOrdinal("Roles")) ? new string[] { } : reader.GetFieldValue<string[]>(reader.GetOrdinal("Roles")),
                     GoogleId = reader.IsDBNull(reader.GetOrdinal("GoogleId")) ? null : reader.GetString(reader.GetOrdinal("GoogleId")),
-                    PictureUrl = reader.IsDBNull(reader.GetOrdinal("PictureUrl")) ? null : reader.GetString(reader.GetOrdinal("PictureUrl"))
+                    PictureUrl = reader.IsDBNull(reader.GetOrdinal("PictureUrl")) ? null : reader.GetString(reader.GetOrdinal("PictureUrl")),
+                    // Campos nuevos
+                    Telefono = reader.IsDBNull(reader.GetOrdinal("Telefono")) ? null : reader.GetString(reader.GetOrdinal("Telefono")),
+                    FechaNacimiento = reader.IsDBNull(reader.GetOrdinal("FechaNacimiento")) ? (DateTime?)null : reader.GetDateTime(reader.GetOrdinal("FechaNacimiento"))
                 });
             }
 
@@ -99,7 +110,10 @@ namespace CineAPI.Repositories
                     Password = reader.IsDBNull(reader.GetOrdinal("Password")) ? null : reader.GetString(reader.GetOrdinal("Password")),
                     Roles = reader.IsDBNull(reader.GetOrdinal("Roles")) ? new string[] { } : reader.GetFieldValue<string[]>(reader.GetOrdinal("Roles")),
                     GoogleId = reader.IsDBNull(reader.GetOrdinal("GoogleId")) ? null : reader.GetString(reader.GetOrdinal("GoogleId")),
-                    PictureUrl = reader.IsDBNull(reader.GetOrdinal("PictureUrl")) ? null : reader.GetString(reader.GetOrdinal("PictureUrl"))
+                    PictureUrl = reader.IsDBNull(reader.GetOrdinal("PictureUrl")) ? null : reader.GetString(reader.GetOrdinal("PictureUrl")),
+                    // Campos nuevos
+                    Telefono = reader.IsDBNull(reader.GetOrdinal("Telefono")) ? null : reader.GetString(reader.GetOrdinal("Telefono")),
+                    FechaNacimiento = reader.IsDBNull(reader.GetOrdinal("FechaNacimiento")) ? (DateTime?)null : reader.GetDateTime(reader.GetOrdinal("FechaNacimiento"))
                 };
             }
 
@@ -127,7 +141,10 @@ namespace CineAPI.Repositories
                     Password = reader.IsDBNull(reader.GetOrdinal("Password")) ? null : reader.GetString(reader.GetOrdinal("Password")),
                     Roles = reader.IsDBNull(reader.GetOrdinal("Roles")) ? new string[] { } : reader.GetFieldValue<string[]>(reader.GetOrdinal("Roles")),
                     GoogleId = reader.IsDBNull(reader.GetOrdinal("GoogleId")) ? null : reader.GetString(reader.GetOrdinal("GoogleId")),
-                    PictureUrl = reader.IsDBNull(reader.GetOrdinal("PictureUrl")) ? null : reader.GetString(reader.GetOrdinal("PictureUrl"))
+                    PictureUrl = reader.IsDBNull(reader.GetOrdinal("PictureUrl")) ? null : reader.GetString(reader.GetOrdinal("PictureUrl")),
+                    // Campos nuevos
+                    Telefono = reader.IsDBNull(reader.GetOrdinal("Telefono")) ? null : reader.GetString(reader.GetOrdinal("Telefono")),
+                    FechaNacimiento = reader.IsDBNull(reader.GetOrdinal("FechaNacimiento")) ? (DateTime?)null : reader.GetDateTime(reader.GetOrdinal("FechaNacimiento"))
                 };
             }
 
@@ -139,8 +156,26 @@ namespace CineAPI.Repositories
             using var connection = new NpgsqlConnection(_connectionString);
             await connection.OpenAsync();
 
-            var query = "UPDATE Users SET Nombre = @Nombre, Email = @Email, Password = @Password, Roles = @Roles, GoogleId = @GoogleId, PictureUrl = @PictureUrl " +
-                        "WHERE UserID = @UserID";
+            // Si estás en desarrollo, imprime información de diagnóstico
+            Console.WriteLine($"[DEBUG] Actualizando usuario: UserID={user.UserID}, Nombre={user.Nombre}, Email={user.Email}");
+            Console.WriteLine($"[DEBUG] Campos adicionales: Telefono={user.Telefono}, FechaNacimiento={user.FechaNacimiento}");
+
+            // Para asegurar que PostgreSQL maneja correctamente los nombres de columnas,
+            // usamos comillas dobles en los nombres que tienen mayúsculas
+            var query = @"
+                UPDATE ""Users""
+                SET
+                    ""Nombre"" = @Nombre,
+                    ""Email"" = @Email,
+                    ""Password"" = @Password,
+                    ""Roles"" = @Roles,
+                    ""GoogleId"" = @GoogleId,
+                    ""PictureUrl"" = @PictureUrl,
+                    ""Telefono"" = @Telefono,
+                    ""FechaNacimiento"" = @FechaNacimiento
+                WHERE ""UserID"" = @UserID
+            ";
+
             using var command = new NpgsqlCommand(query, connection);
 
             command.Parameters.AddWithValue("@UserID", user.UserID);
@@ -150,8 +185,46 @@ namespace CineAPI.Repositories
             command.Parameters.AddWithValue("@Roles", user.Roles);
             command.Parameters.Add("@GoogleId", NpgsqlTypes.NpgsqlDbType.Text).Value = (object?)user.GoogleId ?? DBNull.Value;
             command.Parameters.Add("@PictureUrl", NpgsqlTypes.NpgsqlDbType.Text).Value = (object?)user.PictureUrl ?? DBNull.Value;
+            // Campos nuevos
+            command.Parameters.Add("@Telefono", NpgsqlTypes.NpgsqlDbType.Text).Value = (object?)user.Telefono ?? DBNull.Value;
 
-            await command.ExecuteNonQueryAsync();
+            // Manejo especial para la fecha
+            if (user.FechaNacimiento.HasValue)
+            {
+                command.Parameters.Add("@FechaNacimiento", NpgsqlTypes.NpgsqlDbType.Date).Value = user.FechaNacimiento.Value;
+                Console.WriteLine($"[DEBUG] Fecha en formato de base de datos: {user.FechaNacimiento.Value:yyyy-MM-dd}");
+            }
+            else
+            {
+                command.Parameters.Add("@FechaNacimiento", NpgsqlTypes.NpgsqlDbType.Date).Value = DBNull.Value;
+                Console.WriteLine("[DEBUG] Fecha es NULL");
+            }
+
+            // Ejecutar la consulta y verificar el número de filas afectadas
+            int rowsAffected = await command.ExecuteNonQueryAsync();
+            Console.WriteLine($"[DEBUG] Filas actualizadas: {rowsAffected}");
+
+            // Si no se actualizó ninguna fila, podría ser un problema
+            if (rowsAffected == 0)
+            {
+                Console.WriteLine($"[ERROR] No se actualizó ninguna fila para el UserID={user.UserID}");
+
+                // Verificar si el usuario existe
+                var checkQuery = "SELECT COUNT(*) FROM \"Users\" WHERE \"UserID\" = @UserID";
+                using var checkCommand = new NpgsqlCommand(checkQuery, connection);
+                checkCommand.Parameters.AddWithValue("@UserID", user.UserID);
+
+                int count = Convert.ToInt32(await checkCommand.ExecuteScalarAsync());
+                if (count == 0)
+                {
+                    Console.WriteLine($"[ERROR] El usuario con UserID={user.UserID} no existe en la base de datos");
+                    throw new Exception($"El usuario con ID {user.UserID} no existe en la base de datos");
+                }
+                else
+                {
+                    Console.WriteLine($"[WARN] El usuario existe pero no se actualizó. Posible problema con los valores proporcionados");
+                }
+            }
         }
 
         public async Task<Users?> GetByGoogleIdAsync(string googleId)
@@ -172,10 +245,13 @@ namespace CineAPI.Repositories
                     UserID = reader.GetInt32(reader.GetOrdinal("UserID")),
                     Nombre = reader.GetString(reader.GetOrdinal("Nombre")),
                     Email = reader.GetString(reader.GetOrdinal("Email")),
-                    Password = reader.GetString(reader.GetOrdinal("Password")),
+                    Password = reader.IsDBNull(reader.GetOrdinal("Password")) ? null : reader.GetString(reader.GetOrdinal("Password")),
                     Roles = reader.IsDBNull(reader.GetOrdinal("Roles")) ? new string[] { } : reader.GetFieldValue<string[]>(reader.GetOrdinal("Roles")),
                     GoogleId = reader.IsDBNull(reader.GetOrdinal("GoogleId")) ? null : reader.GetString(reader.GetOrdinal("GoogleId")),
-                    PictureUrl = reader.IsDBNull(reader.GetOrdinal("PictureUrl")) ? null : reader.GetString(reader.GetOrdinal("PictureUrl"))
+                    PictureUrl = reader.IsDBNull(reader.GetOrdinal("PictureUrl")) ? null : reader.GetString(reader.GetOrdinal("PictureUrl")),
+                    // Campos nuevos
+                    Telefono = reader.IsDBNull(reader.GetOrdinal("Telefono")) ? null : reader.GetString(reader.GetOrdinal("Telefono")),
+                    FechaNacimiento = reader.IsDBNull(reader.GetOrdinal("FechaNacimiento")) ? (DateTime?)null : reader.GetDateTime(reader.GetOrdinal("FechaNacimiento"))
                 };
             }
 

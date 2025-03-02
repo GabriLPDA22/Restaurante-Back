@@ -8,14 +8,17 @@ public class Users
     public string? PictureUrl { get; set; } // Foto de perfil de Google (opcional)
     public string[] Roles { get; set; }
 
+    public string? Telefono { get; set; }
+    public DateTime? FechaNacimiento { get; set; }
+
     // Constructor por defecto
     public Users()
     {
-        Roles = Array.Empty<string>(); 
+        Roles = Array.Empty<string>();
     }
 
     // Constructor opcional para inicialización rápida
-    public Users(string nombre, string Email, string password, string? googleId, string? pictureUrl, string[] roles)
+    public Users(string nombre, string Email, string password, string? googleId, string? pictureUrl, string[] roles, string? telefono, DateTime? fechaNacimiento)
     {
         Nombre = nombre;
         Email = Email;
@@ -23,8 +26,9 @@ public class Users
         GoogleId = googleId;
         PictureUrl = pictureUrl;
         Roles = roles;
+        Telefono = telefono;
+        FechaNacimiento = fechaNacimiento;
     }
-
     // Método opcional para depuración (ToString)
     public override string ToString()
     {
