@@ -24,10 +24,10 @@ namespace CineAPI.Repositories
             using var connection = new NpgsqlConnection(_connectionString);
             await connection.OpenAsync();
 
-            // Agregamos Telefono y FechaNacimiento
+            // Corregido: Nombre de tabla en minúsculas, nombres de columnas exactos
             var query = @"
-                INSERT INTO Users
-                (Nombre, Email, Password, Roles, GoogleId, PictureUrl, Telefono, FechaNacimiento)
+                INSERT INTO users
+                (nombre, email, password, roles, googleid, pictureurl, ""Telefono"", ""FechaNacimiento"")
                 VALUES
                 (@Nombre, @Email, @Password, @Roles, @GoogleId, @PictureUrl, @Telefono, @FechaNacimiento)
             ";
@@ -51,7 +51,8 @@ namespace CineAPI.Repositories
             using var connection = new NpgsqlConnection(_connectionString);
             await connection.OpenAsync();
 
-            var query = "DELETE FROM Users WHERE UserID = @UserID";
+            // Corregido: Nombre de tabla en minúsculas
+            var query = "DELETE FROM users WHERE userid = @UserID";
             using var command = new NpgsqlCommand(query, connection);
 
             command.Parameters.AddWithValue("@UserID", id);
@@ -65,7 +66,8 @@ namespace CineAPI.Repositories
             using var connection = new NpgsqlConnection(_connectionString);
             await connection.OpenAsync();
 
-            var query = "SELECT * FROM Users";
+            // Corregido: Nombre de tabla en minúsculas
+            var query = "SELECT * FROM users";
             using var command = new NpgsqlCommand(query, connection);
 
             using var reader = await command.ExecuteReaderAsync();
@@ -73,14 +75,14 @@ namespace CineAPI.Repositories
             {
                 users.Add(new Users
                 {
-                    UserID = reader.GetInt32(reader.GetOrdinal("UserID")),
-                    Nombre = reader.GetString(reader.GetOrdinal("Nombre")),
-                    Email = reader.GetString(reader.GetOrdinal("Email")),
-                    Password = reader.IsDBNull(reader.GetOrdinal("Password")) ? null : reader.GetString(reader.GetOrdinal("Password")),
-                    Roles = reader.IsDBNull(reader.GetOrdinal("Roles")) ? new string[] { } : reader.GetFieldValue<string[]>(reader.GetOrdinal("Roles")),
-                    GoogleId = reader.IsDBNull(reader.GetOrdinal("GoogleId")) ? null : reader.GetString(reader.GetOrdinal("GoogleId")),
-                    PictureUrl = reader.IsDBNull(reader.GetOrdinal("PictureUrl")) ? null : reader.GetString(reader.GetOrdinal("PictureUrl")),
-                    // Campos nuevos
+                    UserID = reader.GetInt32(reader.GetOrdinal("userid")),
+                    Nombre = reader.GetString(reader.GetOrdinal("nombre")),
+                    Email = reader.GetString(reader.GetOrdinal("email")),
+                    Password = reader.IsDBNull(reader.GetOrdinal("password")) ? null : reader.GetString(reader.GetOrdinal("password")),
+                    Roles = reader.IsDBNull(reader.GetOrdinal("roles")) ? new string[] { } : reader.GetFieldValue<string[]>(reader.GetOrdinal("roles")),
+                    GoogleId = reader.IsDBNull(reader.GetOrdinal("googleid")) ? null : reader.GetString(reader.GetOrdinal("googleid")),
+                    PictureUrl = reader.IsDBNull(reader.GetOrdinal("pictureurl")) ? null : reader.GetString(reader.GetOrdinal("pictureurl")),
+                    // Campos nuevos - Nombres corregidos con mayúsculas exactas 
                     Telefono = reader.IsDBNull(reader.GetOrdinal("Telefono")) ? null : reader.GetString(reader.GetOrdinal("Telefono")),
                     FechaNacimiento = reader.IsDBNull(reader.GetOrdinal("FechaNacimiento")) ? (DateTime?)null : reader.GetDateTime(reader.GetOrdinal("FechaNacimiento"))
                 });
@@ -94,7 +96,8 @@ namespace CineAPI.Repositories
             using var connection = new NpgsqlConnection(_connectionString);
             await connection.OpenAsync();
 
-            var query = "SELECT * FROM Users WHERE UserID = @UserID";
+            // Corregido: Nombre de tabla en minúsculas
+            var query = "SELECT * FROM users WHERE userid = @UserID";
             using var command = new NpgsqlCommand(query, connection);
 
             command.Parameters.AddWithValue("@UserID", id);
@@ -104,14 +107,14 @@ namespace CineAPI.Repositories
             {
                 return new Users
                 {
-                    UserID = reader.GetInt32(reader.GetOrdinal("UserID")),
-                    Nombre = reader.GetString(reader.GetOrdinal("Nombre")),
-                    Email = reader.GetString(reader.GetOrdinal("Email")),
-                    Password = reader.IsDBNull(reader.GetOrdinal("Password")) ? null : reader.GetString(reader.GetOrdinal("Password")),
-                    Roles = reader.IsDBNull(reader.GetOrdinal("Roles")) ? new string[] { } : reader.GetFieldValue<string[]>(reader.GetOrdinal("Roles")),
-                    GoogleId = reader.IsDBNull(reader.GetOrdinal("GoogleId")) ? null : reader.GetString(reader.GetOrdinal("GoogleId")),
-                    PictureUrl = reader.IsDBNull(reader.GetOrdinal("PictureUrl")) ? null : reader.GetString(reader.GetOrdinal("PictureUrl")),
-                    // Campos nuevos
+                    UserID = reader.GetInt32(reader.GetOrdinal("userid")),
+                    Nombre = reader.GetString(reader.GetOrdinal("nombre")),
+                    Email = reader.GetString(reader.GetOrdinal("email")),
+                    Password = reader.IsDBNull(reader.GetOrdinal("password")) ? null : reader.GetString(reader.GetOrdinal("password")),
+                    Roles = reader.IsDBNull(reader.GetOrdinal("roles")) ? new string[] { } : reader.GetFieldValue<string[]>(reader.GetOrdinal("roles")),
+                    GoogleId = reader.IsDBNull(reader.GetOrdinal("googleid")) ? null : reader.GetString(reader.GetOrdinal("googleid")),
+                    PictureUrl = reader.IsDBNull(reader.GetOrdinal("pictureurl")) ? null : reader.GetString(reader.GetOrdinal("pictureurl")),
+                    // Campos nuevos - Nombres corregidos con mayúsculas exactas
                     Telefono = reader.IsDBNull(reader.GetOrdinal("Telefono")) ? null : reader.GetString(reader.GetOrdinal("Telefono")),
                     FechaNacimiento = reader.IsDBNull(reader.GetOrdinal("FechaNacimiento")) ? (DateTime?)null : reader.GetDateTime(reader.GetOrdinal("FechaNacimiento"))
                 };
@@ -125,7 +128,8 @@ namespace CineAPI.Repositories
             using var connection = new NpgsqlConnection(_connectionString);
             await connection.OpenAsync();
 
-            var query = "SELECT * FROM Users WHERE Email = @Email";
+            // Corregido: Nombre de tabla en minúsculas
+            var query = "SELECT * FROM users WHERE email = @Email";
             using var command = new NpgsqlCommand(query, connection);
 
             command.Parameters.AddWithValue("@Email", email);
@@ -135,14 +139,14 @@ namespace CineAPI.Repositories
             {
                 return new Users
                 {
-                    UserID = reader.GetInt32(reader.GetOrdinal("UserID")),
-                    Nombre = reader.GetString(reader.GetOrdinal("Nombre")),
-                    Email = reader.GetString(reader.GetOrdinal("Email")),
-                    Password = reader.IsDBNull(reader.GetOrdinal("Password")) ? null : reader.GetString(reader.GetOrdinal("Password")),
-                    Roles = reader.IsDBNull(reader.GetOrdinal("Roles")) ? new string[] { } : reader.GetFieldValue<string[]>(reader.GetOrdinal("Roles")),
-                    GoogleId = reader.IsDBNull(reader.GetOrdinal("GoogleId")) ? null : reader.GetString(reader.GetOrdinal("GoogleId")),
-                    PictureUrl = reader.IsDBNull(reader.GetOrdinal("PictureUrl")) ? null : reader.GetString(reader.GetOrdinal("PictureUrl")),
-                    // Campos nuevos
+                    UserID = reader.GetInt32(reader.GetOrdinal("userid")),
+                    Nombre = reader.GetString(reader.GetOrdinal("nombre")),
+                    Email = reader.GetString(reader.GetOrdinal("email")),
+                    Password = reader.IsDBNull(reader.GetOrdinal("password")) ? null : reader.GetString(reader.GetOrdinal("password")),
+                    Roles = reader.IsDBNull(reader.GetOrdinal("roles")) ? new string[] { } : reader.GetFieldValue<string[]>(reader.GetOrdinal("roles")),
+                    GoogleId = reader.IsDBNull(reader.GetOrdinal("googleid")) ? null : reader.GetString(reader.GetOrdinal("googleid")),
+                    PictureUrl = reader.IsDBNull(reader.GetOrdinal("pictureurl")) ? null : reader.GetString(reader.GetOrdinal("pictureurl")),
+                    // Campos nuevos - Nombres corregidos con mayúsculas exactas
                     Telefono = reader.IsDBNull(reader.GetOrdinal("Telefono")) ? null : reader.GetString(reader.GetOrdinal("Telefono")),
                     FechaNacimiento = reader.IsDBNull(reader.GetOrdinal("FechaNacimiento")) ? (DateTime?)null : reader.GetDateTime(reader.GetOrdinal("FechaNacimiento"))
                 };
@@ -160,20 +164,19 @@ namespace CineAPI.Repositories
             Console.WriteLine($"[DEBUG] Actualizando usuario: UserID={user.UserID}, Nombre={user.Nombre}, Email={user.Email}");
             Console.WriteLine($"[DEBUG] Campos adicionales: Telefono={user.Telefono}, FechaNacimiento={user.FechaNacimiento}");
 
-            // Para asegurar que PostgreSQL maneja correctamente los nombres de columnas,
-            // usamos comillas dobles en los nombres que tienen mayúsculas
+            // Corregido: Nombre de tabla en minúsculas, columnas con comillas cuando tienen mayúsculas
             var query = @"
-                UPDATE ""Users""
+                UPDATE users
                 SET
-                    ""Nombre"" = @Nombre,
-                    ""Email"" = @Email,
-                    ""Password"" = @Password,
-                    ""Roles"" = @Roles,
-                    ""GoogleId"" = @GoogleId,
-                    ""PictureUrl"" = @PictureUrl,
+                    nombre = @Nombre,
+                    email = @Email,
+                    password = @Password,
+                    roles = @Roles,
+                    googleid = @GoogleId,
+                    pictureurl = @PictureUrl,
                     ""Telefono"" = @Telefono,
                     ""FechaNacimiento"" = @FechaNacimiento
-                WHERE ""UserID"" = @UserID
+                WHERE userid = @UserID
             ";
 
             using var command = new NpgsqlCommand(query, connection);
@@ -210,7 +213,7 @@ namespace CineAPI.Repositories
                 Console.WriteLine($"[ERROR] No se actualizó ninguna fila para el UserID={user.UserID}");
 
                 // Verificar si el usuario existe
-                var checkQuery = "SELECT COUNT(*) FROM \"Users\" WHERE \"UserID\" = @UserID";
+                var checkQuery = "SELECT COUNT(*) FROM users WHERE userid = @UserID";
                 using var checkCommand = new NpgsqlCommand(checkQuery, connection);
                 checkCommand.Parameters.AddWithValue("@UserID", user.UserID);
 
@@ -232,7 +235,8 @@ namespace CineAPI.Repositories
             using var connection = new NpgsqlConnection(_connectionString);
             await connection.OpenAsync();
 
-            var query = "SELECT * FROM Users WHERE GoogleId = @GoogleId";
+            // Corregido: Nombre de tabla en minúsculas
+            var query = "SELECT * FROM users WHERE googleid = @GoogleId";
             using var command = new NpgsqlCommand(query, connection);
 
             command.Parameters.Add("@GoogleId", NpgsqlTypes.NpgsqlDbType.Text).Value = (object?)googleId ?? DBNull.Value;
@@ -242,14 +246,14 @@ namespace CineAPI.Repositories
             {
                 return new Users
                 {
-                    UserID = reader.GetInt32(reader.GetOrdinal("UserID")),
-                    Nombre = reader.GetString(reader.GetOrdinal("Nombre")),
-                    Email = reader.GetString(reader.GetOrdinal("Email")),
-                    Password = reader.IsDBNull(reader.GetOrdinal("Password")) ? null : reader.GetString(reader.GetOrdinal("Password")),
-                    Roles = reader.IsDBNull(reader.GetOrdinal("Roles")) ? new string[] { } : reader.GetFieldValue<string[]>(reader.GetOrdinal("Roles")),
-                    GoogleId = reader.IsDBNull(reader.GetOrdinal("GoogleId")) ? null : reader.GetString(reader.GetOrdinal("GoogleId")),
-                    PictureUrl = reader.IsDBNull(reader.GetOrdinal("PictureUrl")) ? null : reader.GetString(reader.GetOrdinal("PictureUrl")),
-                    // Campos nuevos
+                    UserID = reader.GetInt32(reader.GetOrdinal("userid")),
+                    Nombre = reader.GetString(reader.GetOrdinal("nombre")),
+                    Email = reader.GetString(reader.GetOrdinal("email")),
+                    Password = reader.IsDBNull(reader.GetOrdinal("password")) ? null : reader.GetString(reader.GetOrdinal("password")),
+                    Roles = reader.IsDBNull(reader.GetOrdinal("roles")) ? new string[] { } : reader.GetFieldValue<string[]>(reader.GetOrdinal("roles")),
+                    GoogleId = reader.IsDBNull(reader.GetOrdinal("googleid")) ? null : reader.GetString(reader.GetOrdinal("googleid")),
+                    PictureUrl = reader.IsDBNull(reader.GetOrdinal("pictureurl")) ? null : reader.GetString(reader.GetOrdinal("pictureurl")),
+                    // Campos nuevos - Nombres corregidos con mayúsculas exactas
                     Telefono = reader.IsDBNull(reader.GetOrdinal("Telefono")) ? null : reader.GetString(reader.GetOrdinal("Telefono")),
                     FechaNacimiento = reader.IsDBNull(reader.GetOrdinal("FechaNacimiento")) ? (DateTime?)null : reader.GetDateTime(reader.GetOrdinal("FechaNacimiento"))
                 };

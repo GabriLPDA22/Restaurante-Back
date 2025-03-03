@@ -184,30 +184,51 @@ namespace Restaurante.Repositories
                         // Insertar los items del pedido si existen
                         if (pedido.Itmes != null && pedido.Itmes.Count > 0)
                         {
+                            // Obtener el próximo valor de iddetalle disponible
+                            int nextIdDetalle = 1;
+                            using (var command = new NpgsqlCommand("SELECT COALESCE(MAX(iddetalle), 0) + 1 FROM items", connection, transaction))
+                            {
+                                var result = command.ExecuteScalar();
+                                if (result != null && result != DBNull.Value)
+                                {
+                                    nextIdDetalle = Convert.ToInt32(result);
+                                }
+                            }
+                            
+                            int detailCounter = 0;
                             foreach (var item in pedido.Itmes)
                             {
-                                item.IdPedidos = pedido.IdPedidos; // Asignar el ID del pedido a cada item
+                                // Asignar valores a propiedades requeridas
+                                item.IdPedidos = pedido.IdPedidos;
+                                item.IdDetalle = nextIdDetalle + detailCounter;  // Generar ID manualmente
+                                detailCounter++;
                                 
                                 using (var command = new NpgsqlCommand(
-                                    "INSERT INTO items (idpedidos, idproducto, cantidad, precio) VALUES (@IdPedidos, @IdProducto, @Cantidad, @Precio) RETURNING iddetalle", 
+                                    "INSERT INTO items (iddetalle, idpedidos, idproducto, cantidad, precio) VALUES (@IdDetalle, @IdPedidos, @IdProducto, @Cantidad, @Precio)", 
                                     connection, transaction))
                                 {
+                                    command.Parameters.AddWithValue("@IdDetalle", item.IdDetalle);
                                     command.Parameters.AddWithValue("@IdPedidos", item.IdPedidos);
                                     command.Parameters.AddWithValue("@IdProducto", item.IdProducto);
                                     command.Parameters.AddWithValue("@Cantidad", item.Cantidad);
                                     command.Parameters.AddWithValue("@Precio", item.Precio);
                                     
-                                    // Recuperar el ID generado para el item
-                                    item.IdDetalle = (int)command.ExecuteScalar();
+                                    command.ExecuteNonQuery();
                                 }
                             }
                         }
 
                         transaction.Commit();
                     }
-                    catch
+                    catch (Exception ex)
                     {
                         transaction.Rollback();
+                        Console.WriteLine($"Error al crear pedido: {ex.Message}");
+                        Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                        if (ex.InnerException != null)
+                        {
+                            Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                        }
                         throw;
                     }
                 }
