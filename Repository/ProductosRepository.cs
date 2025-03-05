@@ -1,5 +1,8 @@
 using Npgsql;
 using Restaurante.Repositories.Interfaces;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Restaurante.Repositories
 {
