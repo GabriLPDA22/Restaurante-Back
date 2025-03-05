@@ -1,5 +1,9 @@
+using Restaurante.Models.DTOs;
 using Restaurante.Repositories.Interfaces;
 using Restaurante.Services.Interfaces;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Restaurante.Services
 {
@@ -44,6 +48,31 @@ namespace Restaurante.Services
             }
 
             await _productosRepository.UpdateAsync(producto);
+        }
+
+        public async Task UpdateProductoBasicInfoAsync(int id, ProductoUpdateDto productoDto)
+        {
+            // Validaciones básicas
+            if (string.IsNullOrEmpty(productoDto.Nombre))
+            {
+                throw new ArgumentException("El nombre del producto no puede estar vacío.");
+            }
+
+            // Obtener el producto existente
+            var existingProducto = await _productosRepository.GetByIdAsync(id);
+            if (existingProducto == null)
+            {
+                throw new KeyNotFoundException($"No se encontró el producto con ID {id}");
+            }
+
+            // Actualizar solo los campos especificados
+            existingProducto.Nombre = productoDto.Nombre;
+            existingProducto.Descripcion = productoDto.Descripcion;
+            existingProducto.Precio = productoDto.Precio;
+            existingProducto.Categorias = productoDto.Categorias ?? new List<string>();
+
+            // Mantener los demás campos sin cambios
+            await _productosRepository.UpdateAsync(existingProducto);
         }
 
         public async Task DeleteProductoAsync(int productoID)
