@@ -1,5 +1,6 @@
 using Npgsql;
 using CineAPI.Repositories.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -26,7 +27,7 @@ namespace CineAPI.Repositories
 
             // Agregamos Telefono y FechaNacimiento
             var query = @"
-                INSERT INTO Users
+                INSERT INTO users
                 (Nombre, Email, Password, Roles, GoogleId, PictureUrl, Telefono, FechaNacimiento)
                 VALUES
                 (@Nombre, @Email, @Password, @Roles, @GoogleId, @PictureUrl, @Telefono, @FechaNacimiento)
@@ -51,7 +52,7 @@ namespace CineAPI.Repositories
             using var connection = new NpgsqlConnection(_connectionString);
             await connection.OpenAsync();
 
-            var query = "DELETE FROM Users WHERE UserID = @UserID";
+            var query = "DELETE FROM users WHERE UserID = @UserID";
             using var command = new NpgsqlCommand(query, connection);
 
             command.Parameters.AddWithValue("@UserID", id);
@@ -65,7 +66,7 @@ namespace CineAPI.Repositories
             using var connection = new NpgsqlConnection(_connectionString);
             await connection.OpenAsync();
 
-            var query = "SELECT * FROM Users";
+            var query = "SELECT * FROM users";
             using var command = new NpgsqlCommand(query, connection);
 
             using var reader = await command.ExecuteReaderAsync();
@@ -94,7 +95,7 @@ namespace CineAPI.Repositories
             using var connection = new NpgsqlConnection(_connectionString);
             await connection.OpenAsync();
 
-            var query = "SELECT * FROM Users WHERE UserID = @UserID";
+            var query = "SELECT * FROM users WHERE UserID = @UserID";
             using var command = new NpgsqlCommand(query, connection);
 
             command.Parameters.AddWithValue("@UserID", id);
@@ -125,7 +126,7 @@ namespace CineAPI.Repositories
             using var connection = new NpgsqlConnection(_connectionString);
             await connection.OpenAsync();
 
-            var query = "SELECT * FROM Users WHERE Email = @Email";
+            var query = "SELECT * FROM users WHERE Email = @Email";
             using var command = new NpgsqlCommand(query, connection);
 
             command.Parameters.AddWithValue("@Email", email);
@@ -160,21 +161,20 @@ namespace CineAPI.Repositories
             Console.WriteLine($"[DEBUG] Actualizando usuario: UserID={user.UserID}, Nombre={user.Nombre}, Email={user.Email}");
             Console.WriteLine($"[DEBUG] Campos adicionales: Telefono={user.Telefono}, FechaNacimiento={user.FechaNacimiento}");
 
-            // Para asegurar que PostgreSQL maneja correctamente los nombres de columnas,
-            // usamos comillas dobles en los nombres que tienen mayúsculas
+            // Usamos los nombres exactos de las columnas como están en la base de datos
             var query = @"
-                UPDATE ""Users""
-                SET
-                    ""Nombre"" = @Nombre,
-                    ""Email"" = @Email,
-                    ""Password"" = @Password,
-                    ""Roles"" = @Roles,
-                    ""GoogleId"" = @GoogleId,
-                    ""PictureUrl"" = @PictureUrl,
-                    ""Telefono"" = @Telefono,
-                    ""FechaNacimiento"" = @FechaNacimiento
-                WHERE ""UserID"" = @UserID
-            ";
+        UPDATE users
+        SET
+            nombre = @Nombre,
+            email = @Email,
+            password = @Password,
+            roles = @Roles,
+            googleid = @GoogleId,
+            pictureurl = @PictureUrl,
+            ""Telefono"" = @Telefono,
+            ""FechaNacimiento"" = @FechaNacimiento
+        WHERE userid = @UserID
+    ";
 
             using var command = new NpgsqlCommand(query, connection);
 
@@ -185,7 +185,7 @@ namespace CineAPI.Repositories
             command.Parameters.AddWithValue("@Roles", user.Roles);
             command.Parameters.Add("@GoogleId", NpgsqlTypes.NpgsqlDbType.Text).Value = (object?)user.GoogleId ?? DBNull.Value;
             command.Parameters.Add("@PictureUrl", NpgsqlTypes.NpgsqlDbType.Text).Value = (object?)user.PictureUrl ?? DBNull.Value;
-            // Campos nuevos
+            // Campos nuevos con nombres exactos
             command.Parameters.Add("@Telefono", NpgsqlTypes.NpgsqlDbType.Text).Value = (object?)user.Telefono ?? DBNull.Value;
 
             // Manejo especial para la fecha
@@ -210,7 +210,7 @@ namespace CineAPI.Repositories
                 Console.WriteLine($"[ERROR] No se actualizó ninguna fila para el UserID={user.UserID}");
 
                 // Verificar si el usuario existe
-                var checkQuery = "SELECT COUNT(*) FROM \"Users\" WHERE \"UserID\" = @UserID";
+                var checkQuery = "SELECT COUNT(*) FROM users WHERE userid = @UserID";
                 using var checkCommand = new NpgsqlCommand(checkQuery, connection);
                 checkCommand.Parameters.AddWithValue("@UserID", user.UserID);
 
@@ -232,7 +232,7 @@ namespace CineAPI.Repositories
             using var connection = new NpgsqlConnection(_connectionString);
             await connection.OpenAsync();
 
-            var query = "SELECT * FROM Users WHERE GoogleId = @GoogleId";
+            var query = "SELECT * FROM users WHERE GoogleId = @GoogleId";
             using var command = new NpgsqlCommand(query, connection);
 
             command.Parameters.Add("@GoogleId", NpgsqlTypes.NpgsqlDbType.Text).Value = (object?)googleId ?? DBNull.Value;

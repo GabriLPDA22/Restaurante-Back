@@ -1,5 +1,7 @@
+using CineAPI.Models.DTOs;
 using CineAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
@@ -59,7 +61,7 @@ namespace CineAPI.Controllers
 
                 return Ok(user);
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 return BadRequest(new { Message = ex.Message });
             }
@@ -80,31 +82,29 @@ namespace CineAPI.Controllers
         {
             try
             {
-                // user.Telefono y user.FechaNacimiento vendrán en el JSON si se envían
                 await _userService.AddUserAsync(user);
                 return CreatedAtAction(nameof(GetUserById), new { id = user.UserID }, user);
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 return BadRequest(new { Message = ex.Message });
             }
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateUser(int id, [FromBody] Users user)
+        public async Task<IActionResult> UpdateUser(int id, [FromBody] UserUpdateDto userUpdate)
         {
-            if (id != user.UserID)
-                return BadRequest(new { Message = "El ID proporcionado no coincide con el usuario." });
-
             try
             {
-                Console.WriteLine($"Actualizando usuario ID {id}: Nombre={user.Nombre}, Email={user.Email}, Telefono={user.Telefono}, FechaNacimiento={user.FechaNacimiento}");
+                Console.WriteLine($"Actualizando usuario ID {id}: Nombre={userUpdate.Nombre}, Email={userUpdate.Email}, Telefono={userUpdate.Telefono}, FechaNacimiento={userUpdate.FechaNacimiento}");
 
-                // user.Telefono y user.FechaNacimiento se mapearán desde el JSON
-                await _userService.UpdateUserAsync(user);
-                return Ok(user);
+                await _userService.UpdateUserBasicInfo(id, userUpdate);
+                
+                // Obtener el usuario actualizado para devolverlo
+                var updatedUser = await _userService.GetUserByIdAsync(id);
+                return Ok(updatedUser);
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 Console.WriteLine($"Error al actualizar usuario: {ex.Message}");
                 return NotFound(new { Message = ex.Message });
@@ -119,15 +119,14 @@ namespace CineAPI.Controllers
                 await _userService.DeleteUserAsync(id);
                 return NoContent();
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 return NotFound(new { Message = ex.Message });
             }
         }
 
-
         [HttpPut("update-by-email")]
-        public async Task<IActionResult> UpdateUserByEmail([FromBody] UpdateUserDto updateDto)
+        public async Task<IActionResult> UpdateUserByEmail([FromBody] UserUpdateDto updateDto)
         {
             try
             {
@@ -140,44 +139,28 @@ namespace CineAPI.Controllers
 
                 Console.WriteLine($"Usuario encontrado: ID={existingUser.UserID}, Nombre={existingUser.Nombre}");
 
-                // 2. Actualizar solo los campos proporcionados
-                if (!string.IsNullOrEmpty(updateDto.Nombre))
-                    existingUser.Nombre = updateDto.Nombre;
-
-                if (!string.IsNullOrEmpty(updateDto.Telefono))
-                    existingUser.Telefono = updateDto.Telefono;
-
-                if (!string.IsNullOrEmpty(updateDto.FechaNacimiento))
+                // 2. Crear un UserUpdateDto completo
+                var userUpdateDto = new UserUpdateDto
                 {
-                    if (DateTime.TryParse(updateDto.FechaNacimiento, out DateTime fechaNac))
-                    {
-                        existingUser.FechaNacimiento = fechaNac;
-                        Console.WriteLine($"Fecha convertida: {fechaNac}");
-                    }
-                    else
-                    {
-                        Console.WriteLine($"No se pudo convertir la fecha: {updateDto.FechaNacimiento}");
-                    }
-                }
+                    Nombre = updateDto.Nombre,
+                    Email = updateDto.Email,
+                    Telefono = updateDto.Telefono,
+                    FechaNacimiento = updateDto.FechaNacimiento
+                };
 
-                // 3. Guardar cambios
-                await _userService.UpdateUserAsync(existingUser);
+                // 3. Usar el mismo método de actualización básica
+                await _userService.UpdateUserBasicInfo(existingUser.UserID, userUpdateDto);
+                
+                // 4. Obtener el usuario actualizado
+                var updatedUser = await _userService.GetUserByIdAsync(existingUser.UserID);
                 Console.WriteLine("Usuario actualizado correctamente");
-                return Ok(existingUser);
+                return Ok(updatedUser);
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 Console.WriteLine($"Error al actualizar por email: {ex.Message}");
                 return BadRequest(new { Message = ex.Message });
             }
         }
     }
-}
-
-public class UpdateUserDto
-{
-    public string Email { get; set; } = string.Empty;
-    public string? Nombre { get; set; }
-    public string? Telefono { get; set; }
-    public string? FechaNacimiento { get; set; }
 }

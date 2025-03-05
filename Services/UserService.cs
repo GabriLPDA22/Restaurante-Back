@@ -1,6 +1,10 @@
+using CineAPI.Models.DTOs;
 using CineAPI.Repositories.Interfaces;
 using CineAPI.Services.Interfaces;
 using Google.Apis.Auth;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace CineAPI.Services
 {
@@ -41,14 +45,13 @@ namespace CineAPI.Services
             await _userRepository.AddAsync(user);
         }
 
-
         // Eliminar usuario
         public async Task DeleteUserAsync(int userId)
         {
             var user = await _userRepository.GetByIdAsync(userId);
             if (user == null)
             {
-                throw new System.Exception("Usuario no encontrado.");
+                throw new Exception("Usuario no encontrado.");
             }
 
             await _userRepository.DeleteAsync(userId);
@@ -72,13 +75,13 @@ namespace CineAPI.Services
             return await _userRepository.GetByEmailAsync(email.ToLowerInvariant());
         }
 
-        // Actualizar usuario
+        // Actualizar usuario completo
         public async Task UpdateUserAsync(Users user)
         {
             var existingUser = await _userRepository.GetByIdAsync(user.UserID);
             if (existingUser == null)
             {
-                throw new System.Exception("Usuario no encontrado.");
+                throw new Exception("Usuario no encontrado.");
             }
 
             // Si se proporciona una nueva contraseña, la hasheamos antes de actualizar
@@ -91,6 +94,25 @@ namespace CineAPI.Services
             user.Email = user.Email.ToLowerInvariant();
 
             await _userRepository.UpdateAsync(user);
+        }
+
+        // Actualizar información básica del usuario
+        public async Task UpdateUserBasicInfo(int userId, UserUpdateDto updateDto)
+        {
+            var existingUser = await _userRepository.GetByIdAsync(userId);
+            if (existingUser == null)
+            {
+                throw new Exception("Usuario no encontrado.");
+            }
+
+            // Actualizar solo los campos básicos
+            existingUser.Nombre = updateDto.Nombre;
+            existingUser.Email = updateDto.Email.ToLowerInvariant();
+            existingUser.Telefono = updateDto.Telefono;
+            existingUser.FechaNacimiento = updateDto.FechaNacimiento;
+
+            // Mantener los demás campos sin cambios
+            await _userRepository.UpdateAsync(existingUser);
         }
 
         // Método para encriptar contraseñas con BCrypt
@@ -132,6 +154,5 @@ namespace CineAPI.Services
 
             return user;
         }
-
     }
 }
