@@ -85,13 +85,13 @@ namespace Restaurante.Controllers
                 {
                     UserID = pedidoDto.UserID,
                     Fecha = DateTime.Now,
-                    Itmes = new List<Items>()
+                    items = new List<Items>()
                 };
 
                 // Convertir los items del DTO al modelo
                 foreach (var itemDto in pedidoDto.Items)
                 {
-                    pedido.Itmes.Add(new Items
+                    pedido.items.Add(new Items
                     {
                         IdProducto = itemDto.IdProducto,
                         Cantidad = itemDto.Cantidad,

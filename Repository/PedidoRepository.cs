@@ -41,7 +41,7 @@ namespace Restaurante.Repositories
             // Obtener los items para cada pedido
             foreach (var pedido in pedidos)
             {
-                pedido.Itmes = GetItemsByPedidoId(pedido.IdPedidos);
+                pedido.items = GetItemsByPedidoId(pedido.IdPedidos);
             }
 
             return pedidos;
@@ -73,7 +73,7 @@ namespace Restaurante.Repositories
 
             if (pedido != null)
             {
-                pedido.Itmes = GetItemsByPedidoId(pedido.IdPedidos);
+                pedido.items = GetItemsByPedidoId(pedido.IdPedidos);
             }
 
             return pedido;
@@ -136,7 +136,7 @@ namespace Restaurante.Repositories
             // Obtener los items para cada pedido
             foreach (var pedido in pedidos)
             {
-                pedido.Itmes = GetItemsByPedidoId(pedido.IdPedidos);
+                pedido.items = GetItemsByPedidoId(pedido.IdPedidos);
             }
 
             return pedidos;
@@ -182,9 +182,9 @@ namespace Restaurante.Repositories
                         }
 
                         // Insertar los items del pedido si existen
-                        if (pedido.Itmes != null && pedido.Itmes.Count > 0)
+                        if (pedido.items != null && pedido.items.Count > 0)
                         {
-                            foreach (var item in pedido.Itmes)
+                            foreach (var item in pedido.items)
                             {
                                 item.IdPedidos = pedido.IdPedidos; // Asignar el ID del pedido a cada item
                                 
