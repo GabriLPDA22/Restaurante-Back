@@ -5,7 +5,7 @@ using BCrypt.Net; // Asegúrate de tener este using
 
 namespace Restaurante.Controllers
 {
-    [Route("api/auth")]
+    [Route("api/[controller]")]
     [ApiController]
     public class AuthController : ControllerBase
     {

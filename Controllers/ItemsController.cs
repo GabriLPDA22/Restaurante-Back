@@ -7,7 +7,7 @@ using Restaurante.Services.Interfaces;
 namespace Restaurante.Controllers
 {
 
-    [Route("api/auth")]
+    [Route("api/[controller]")]
     [ApiController]
     public class ItemsController : ControllerBase
     {
