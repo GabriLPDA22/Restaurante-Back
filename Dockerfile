@@ -21,4 +21,4 @@ COPY --from=build /app .
 EXPOSE 80
 
 # Definir el comando para ejecutar la aplicación
-ENTRYPOINT ["dotnet", "CineWebApp.dll"]
+ENTRYPOINT ["dotnet", "Restaurante.dll"]
