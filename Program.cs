@@ -40,11 +40,9 @@ builder.Services.AddScoped<IPedidoRepository>(provider =>
     new PedidoRepository(postgresConnection));
 builder.Services.AddScoped<IPedidoService, PedidoService>();
 
-// 🔹 REGISTRO CORRECTO DE ADMINREPOSITORY PARA EVITAR EL ERROR 🔹
 builder.Services.AddScoped<IAdminRepository>(provider => 
     new AdminRepository(postgresConnection));
 builder.Services.AddScoped<IAdminService, AdminService>();
-
 
 builder.Services.AddScoped<IItemsRepository>(provider => 
     new ItemsRepository(postgresConnection));

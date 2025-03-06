@@ -1,5 +1,6 @@
 using Npgsql;
 using Restaurante.Repositories.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.Data;
 
@@ -14,6 +15,91 @@ namespace Restaurante.Repositories
             _connectionString = connectionString;
         }
 
+        public void Add(Pedido pedido)
+        {
+            using (var connection = new NpgsqlConnection(_connectionString))
+            {
+                connection.Open();
+                
+                using (var transaction = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        // Verificar que el usuario existe
+                        using (var command = new NpgsqlCommand(
+                            "SELECT COUNT(1) FROM users WHERE userid = @UserID", 
+                            connection, transaction))
+                        {
+                            command.Parameters.AddWithValue("@UserID", pedido.UserID);
+                            var userCount = Convert.ToInt64(command.ExecuteScalar());
+                            
+                            if (userCount == 0)
+                            {
+                                throw new InvalidOperationException($"El usuario con ID {pedido.UserID} no existe.");
+                            }
+                        }
+
+                        // Insertar el pedido
+                        int pedidoId;
+                        using (var command = new NpgsqlCommand(
+                            "INSERT INTO pedidos (fecha, user_id) VALUES (@Fecha, @UserID) RETURNING id_pedidos", 
+                            connection, transaction))
+                        {
+                            command.Parameters.AddWithValue("@Fecha", pedido.Fecha);
+                            command.Parameters.AddWithValue("@UserID", pedido.UserID);
+                            
+                            pedidoId = Convert.ToInt32(command.ExecuteScalar());
+                        }
+
+                        // Insertar los items del pedido si existen
+                        if (pedido.items != null && pedido.items.Count > 0)
+                        {
+                            // Obtener el próximo valor de iddetalle
+                            int nextIdDetalle;
+                            using (var command = new NpgsqlCommand(
+                                "SELECT COALESCE(MAX(iddetalle), 0) + 1 FROM items", 
+                                connection, transaction))
+                            {
+                                nextIdDetalle = Convert.ToInt32(command.ExecuteScalar());
+                            }
+
+                            foreach (var item in pedido.items)
+                            {
+                                // Usar el siguiente valor de iddetalle
+                                string insertItemSql = @"
+INSERT INTO items (iddetalle, idpedidos, idproducto, cantidad, precio) 
+VALUES (@IdDetalle, @IdPedidos, @IdProducto, @Cantidad, @Precio)";
+
+                                using (var command = new NpgsqlCommand(insertItemSql, connection, transaction))
+                                {
+                                    command.Parameters.AddWithValue("@IdDetalle", nextIdDetalle);
+                                    command.Parameters.AddWithValue("@IdPedidos", pedidoId);
+                                    command.Parameters.AddWithValue("@IdProducto", item.IdProducto);
+                                    command.Parameters.AddWithValue("@Cantidad", item.Cantidad);
+                                    command.Parameters.AddWithValue("@Precio", item.Precio);
+                                    
+                                    command.ExecuteNonQuery();
+
+                                    // Asignar el iddetalle generado al item
+                                    item.IdDetalle = nextIdDetalle;
+                                    
+                                    // Incrementar para el próximo item
+                                    nextIdDetalle++;
+                                }
+                            }
+                        }
+
+                        transaction.Commit();
+                    }
+                    catch (Exception ex)
+                    {
+                        transaction.Rollback();
+                        throw new InvalidOperationException($"Error al crear el pedido: {ex.Message}", ex);
+                    }
+                }
+            }
+        }
+
         public IEnumerable<Pedido> GetAll()
         {
             var pedidos = new List<Pedido>();
@@ -26,12 +112,11 @@ namespace Restaurante.Repositories
                     {
                         while (reader.Read())
                         {
-                            var pedido = new Pedido
-                            {
-                                IdPedidos = reader.GetInt32(reader.GetOrdinal("id_pedidos")),
-                                Fecha = reader.GetDateTime(reader.GetOrdinal("fecha")),
-                                UserID = reader.GetInt32(reader.GetOrdinal("user_id"))
-                            };
+                            var pedido = new Pedido(
+                                reader.GetInt32(reader.GetOrdinal("id_pedidos")),
+                                reader.GetDateTime(reader.GetOrdinal("fecha")),
+                                reader.GetInt32(reader.GetOrdinal("user_id"))
+                            );
                             pedidos.Add(pedido);
                         }
                     }
@@ -60,12 +145,11 @@ namespace Restaurante.Repositories
                     {
                         if (reader.Read())
                         {
-                            pedido = new Pedido
-                            {
-                                IdPedidos = reader.GetInt32(reader.GetOrdinal("id_pedidos")),
-                                Fecha = reader.GetDateTime(reader.GetOrdinal("fecha")),
-                                UserID = reader.GetInt32(reader.GetOrdinal("user_id"))
-                            };
+                            pedido = new Pedido(
+                                reader.GetInt32(reader.GetOrdinal("id_pedidos")),
+                                reader.GetDateTime(reader.GetOrdinal("fecha")),
+                                reader.GetInt32(reader.GetOrdinal("user_id"))
+                            );
                         }
                     }
                 }
@@ -121,12 +205,11 @@ namespace Restaurante.Repositories
                     {
                         while (reader.Read())
                         {
-                            var pedido = new Pedido
-                            {
-                                IdPedidos = reader.GetInt32(reader.GetOrdinal("id_pedidos")),
-                                Fecha = reader.GetDateTime(reader.GetOrdinal("fecha")),
-                                UserID = reader.GetInt32(reader.GetOrdinal("user_id"))
-                            };
+                            var pedido = new Pedido(
+                                reader.GetInt32(reader.GetOrdinal("id_pedidos")),
+                                reader.GetDateTime(reader.GetOrdinal("fecha")),
+                                reader.GetInt32(reader.GetOrdinal("user_id"))
+                            );
                             pedidos.Add(pedido);
                         }
                     }
@@ -142,89 +225,80 @@ namespace Restaurante.Repositories
             return pedidos;
         }
 
-        public void Add(Pedido pedido)
+        public void Update(Pedido pedido)
         {
-            // Verificar que el usuario existe
-            bool userExists = false;
             using (var connection = new NpgsqlConnection(_connectionString))
             {
                 connection.Open();
-                using (var command = new NpgsqlCommand("SELECT COUNT(1) FROM users WHERE userid = @UserID", connection))
-                {
-                    command.Parameters.AddWithValue("@UserID", pedido.UserID);
-                    userExists = Convert.ToInt64(command.ExecuteScalar()) > 0;
-                }
-            }
-            
-            if (!userExists)
-            {
-                throw new InvalidOperationException($"El usuario con ID {pedido.UserID} no existe.");
-            }
-
-            using (var connection = new NpgsqlConnection(_connectionString))
-            {
-                connection.Open();
-                
-                // Usar transacción para asegurar la integridad de datos
                 using (var transaction = connection.BeginTransaction())
                 {
-                    try
+                    try 
                     {
-                        // Insertar el pedido
-                        using (var command = new NpgsqlCommand("INSERT INTO pedidos (fecha, user_id) VALUES (@Fecha, @UserID) RETURNING id_pedidos", connection, transaction))
+                        // Actualizar el pedido
+                        using (var command = new NpgsqlCommand(
+                            "UPDATE pedidos SET fecha = @Fecha, user_id = @UserID WHERE id_pedidos = @Id", 
+                            connection, transaction))
                         {
+                            command.Parameters.AddWithValue("@Id", pedido.IdPedidos);
                             command.Parameters.AddWithValue("@Fecha", pedido.Fecha);
                             command.Parameters.AddWithValue("@UserID", pedido.UserID);
-                            
-                            // Recuperar el ID generado
-                            var id = (int)command.ExecuteScalar();
-                            pedido.IdPedidos = id;
+                            command.ExecuteNonQuery();
                         }
 
-                        // Insertar los items del pedido si existen
+                        // Eliminar items existentes
+                        using (var command = new NpgsqlCommand(
+                            "DELETE FROM items WHERE idpedidos = @IdPedidos", 
+                            connection, transaction))
+                        {
+                            command.Parameters.AddWithValue("@IdPedidos", pedido.IdPedidos);
+                            command.ExecuteNonQuery();
+                        }
+
+                        // Insertar nuevos items si existen
                         if (pedido.items != null && pedido.items.Count > 0)
                         {
+                            // Obtener el próximo valor de iddetalle
+                            int nextIdDetalle;
+                            using (var command = new NpgsqlCommand(
+                                "SELECT COALESCE(MAX(iddetalle), 0) + 1 FROM items", 
+                                connection, transaction))
+                            {
+                                nextIdDetalle = Convert.ToInt32(command.ExecuteScalar());
+                            }
+
                             foreach (var item in pedido.items)
                             {
-                                item.IdPedidos = pedido.IdPedidos; // Asignar el ID del pedido a cada item
-                                
-                                using (var command = new NpgsqlCommand(
-                                    "INSERT INTO items (idpedidos, idproducto, cantidad, precio) VALUES (@IdPedidos, @IdProducto, @Cantidad, @Precio) RETURNING iddetalle", 
-                                    connection, transaction))
+                                // Usar el siguiente valor de iddetalle
+                                string insertItemSql = @"
+INSERT INTO items (iddetalle, idpedidos, idproducto, cantidad, precio) 
+VALUES (@IdDetalle, @IdPedidos, @IdProducto, @Cantidad, @Precio)";
+
+                                using (var command = new NpgsqlCommand(insertItemSql, connection, transaction))
                                 {
-                                    command.Parameters.AddWithValue("@IdPedidos", item.IdPedidos);
+                                    command.Parameters.AddWithValue("@IdDetalle", nextIdDetalle);
+                                    command.Parameters.AddWithValue("@IdPedidos", pedido.IdPedidos);
                                     command.Parameters.AddWithValue("@IdProducto", item.IdProducto);
                                     command.Parameters.AddWithValue("@Cantidad", item.Cantidad);
                                     command.Parameters.AddWithValue("@Precio", item.Precio);
                                     
-                                    // Recuperar el ID generado para el item
-                                    item.IdDetalle = (int)command.ExecuteScalar();
+                                    command.ExecuteNonQuery();
+
+                                    // Asignar el iddetalle generado al item
+                                    item.IdDetalle = nextIdDetalle;
+                                    
+                                    // Incrementar para el próximo item
+                                    nextIdDetalle++;
                                 }
                             }
                         }
 
                         transaction.Commit();
                     }
-                    catch
+                    catch (Exception ex)
                     {
                         transaction.Rollback();
-                        throw;
+                        throw new InvalidOperationException($"Error al actualizar el pedido: {ex.Message}", ex);
                     }
-                }
-            }
-        }
-
-        public void Update(Pedido pedido)
-        {
-            using (var connection = new NpgsqlConnection(_connectionString))
-            {
-                connection.Open();
-                using (var command = new NpgsqlCommand("UPDATE pedidos SET fecha = @Fecha, user_id = @UserID WHERE id_pedidos = @Id", connection))
-                {
-                    command.Parameters.AddWithValue("@Id", pedido.IdPedidos);
-                    command.Parameters.AddWithValue("@Fecha", pedido.Fecha);
-                    command.Parameters.AddWithValue("@UserID", pedido.UserID);
-                    command.ExecuteNonQuery();
                 }
             }
         }
@@ -254,10 +328,10 @@ namespace Restaurante.Repositories
 
                         transaction.Commit();
                     }
-                    catch
+                    catch (Exception ex)
                     {
                         transaction.Rollback();
-                        throw;
+                        throw new InvalidOperationException($"Error al eliminar el pedido: {ex.Message}", ex);
                     }
                 }
             }
