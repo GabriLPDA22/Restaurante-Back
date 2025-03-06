@@ -9,7 +9,11 @@ using CineAPI.Services.Interfaces;
 using CineAPI.Services;
 using Npgsql;
 
+
+
 var builder = WebApplication.CreateBuilder(args);
+
+builder.WebHost.UseUrls("http://0.0.0.0:8080");
 
 // Cargar configuración
 var configuration = builder.Configuration;

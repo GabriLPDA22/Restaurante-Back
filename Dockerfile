@@ -1,21 +1,22 @@
 # Etapa 1: Build
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /source
+WORKDIR /app
 
-# Copiar los archivos del proyecto
-COPY ../back_end/*.csproj .
-RUN dotnet restore
+# Copiar archivos de solución y de proyecto
+COPY Back.sln ./
+COPY Restaurante.csproj ./
+RUN dotnet restore Restaurante.csproj
 
-# Copiar todo el código fuente y compilar la aplicación
-COPY ../back_end/ .
-RUN dotnet publish -c Release -o /app
+# Copiar el código fuente y compilar la aplicación
+COPY . ./
+RUN dotnet publish Restaurante.csproj -c Release -o /publish
 
 # Etapa 2: Runtime
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 
-# Copiar la aplicación publicada desde la etapa de build
-COPY --from=build /app .
+# Copiar la aplicación compilada desde la etapa de build
+COPY --from=build /publish .
 
 # Exponer el puerto para la API
 EXPOSE 80
