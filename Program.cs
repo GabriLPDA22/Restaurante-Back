@@ -42,9 +42,9 @@ builder.Services.AddScoped<IItemsService, ItemsService>();
 // Configurar CORS para permitir peticiones desde localhost:5173 (React/Vue/Angular en desarrollo)
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowLocalhost5173", builder =>
+    options.AddPolicy("Elcors", builder =>
     {
-        builder.WithOrigins("http://localhost:5173")
+        builder.WithOrigins("http://34.196.144.197")
                .AllowAnyHeader()
                .AllowAnyMethod()
                .AllowCredentials();
@@ -60,7 +60,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 var app = builder.Build();
 // Habilitar CORS
-app.UseCors("AllowLocalhost5173");
+app.UseCors("Elcors");
 // Habilitar Swagger en TODOS los entornos (incluyendo producción)
 app.UseDeveloperExceptionPage();
 app.UseSwagger();
