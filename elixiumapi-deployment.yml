@@ -1,0 +1,38 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: elixiumapi
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 8080
+  selector:
+    app: elixium-api
+    tier: backend
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: elixium-api-deploy
+  labels:
+    app: elixium-api
+spec:
+  selector:
+    matchLabels:
+      app: elixium-api
+      tier: backend
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: elixium-api
+        tier: backend
+    spec:
+      containers:
+      - name: elixium-api
+        image: franvilla/back:latest
+        ports:
+        - containerPort: 8080

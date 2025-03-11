@@ -45,7 +45,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("Elcors", builder =>
     {
-        builder.WithOrigins("http://34.196.144.197")
+        builder.WithOrigins("http://elixium.retocsv.es")
                .AllowAnyHeader()
                .AllowAnyMethod()
                .AllowCredentials();
