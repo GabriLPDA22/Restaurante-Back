@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+using Restaurante.Models.DTOs;
 using Restaurante.Services.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -58,19 +60,27 @@ namespace Restaurante.Controllers
         }
 
         /// <summary>
-        /// Actualiza un producto existente.
+        /// Actualiza información básica de un producto existente.
         /// </summary>
         /// <param name="id">ID del producto.</param>
-        /// <param name="producto">Datos del producto.</param>
+        /// <param name="productoDto">Datos básicos del producto a actualizar.</param>
         /// <returns>No content si se actualizó correctamente.</returns>
         [HttpPut("{id}")]
-        public async Task<ActionResult> UpdateProducto(int id, Productos producto)
+        public async Task<ActionResult> UpdateProducto(int id, ProductoUpdateDto productoDto)
         {
-            if (id != producto.Id)
-                return BadRequest("El ID del producto no coincide.");
-
-            await _productosService.UpdateProductoAsync(producto);
-            return NoContent();
+            try
+            {
+                await _productosService.UpdateProductoBasicInfoAsync(id, productoDto);
+                return NoContent();
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
         }
 
         /// <summary>

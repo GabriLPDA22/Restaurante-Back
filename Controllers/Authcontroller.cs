@@ -1,6 +1,7 @@
-using Google.Apis.Auth;
-using CineAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using CineAPI.Services.Interfaces;
+using System.Threading.Tasks;
+using BCrypt.Net; // Asegúrate de tener este using
 
 namespace Restaurante.Controllers
 {
@@ -9,62 +10,82 @@ namespace Restaurante.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IUserService _userService;
-
-        // Inyección de dependencia de IUserService
+        
         public AuthController(IUserService userService)
         {
             _userService = userService;
         }
 
-        // Endpoint para login con Google
-        [HttpPost("google-login")]
-        public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest request)
+        // Registro normal (email y contraseña)
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
-            // Verificar el token recibido con Google
-            var payload = await VerifyGoogleToken(request.Token);
-            
-            if (payload == null)
+            // Validación de campos obligatorios
+            if (string.IsNullOrEmpty(request.Email) || string.IsNullOrEmpty(request.Password))
             {
-                return Unauthorized("Invalid Google token.");
+                return BadRequest(new { Message = "El email y la contraseña son obligatorios." });
+            }
+            
+            // Opcional: Normalizar el email (por ejemplo, a minúsculas)
+            var normalizedEmail = request.Email.ToLowerInvariant();
+            
+            var user = new Users
+            {
+                Nombre = string.IsNullOrEmpty(request.Nombre) ? "Sin Nombre" : request.Nombre,
+                Email = normalizedEmail,
+                Password = _userService.HashPassword(request.Password)
+            };
+
+            try
+            {
+                await _userService.AddUserAsync(user);
+                return Ok(new { Message = "Usuario registrado correctamente." });
+            }
+            catch (System.Exception ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
+        }
+
+        // Login normal
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginRequest request)
+        {
+            // Normalizar el email para la búsqueda
+            var normalizedEmail = request.Email.ToLowerInvariant();
+            
+            var user = await _userService.GetUserByEmailAsync(request.Email);
+            Console.WriteLine(user == null
+                ? "Usuario no encontrado"
+                : $"Usuario encontrado: {user.Email}, Hash: {user.Password}");
+            if (user != null)
+            {
+                bool verify = _userService.VerifyPassword(request.Password, user.Password);
+                Console.WriteLine($"Verificación: {verify}");
             }
 
-            // Usar el servicio de usuario para crear o autenticar al usuario
-            var user = await _userService.GetOrCreateUserAsync(payload);
 
-            // Devuelve la información del usuario
             return Ok(new
             {
                 user.UserID,
                 user.Nombre,
-                user.Correo,
+                user.Email,
                 user.PictureUrl,
                 user.Roles
             });
         }
-
-        // Método para verificar el token de Google
-        private async Task<GoogleJsonWebSignature.Payload> VerifyGoogleToken(string token)
-        {
-            try
-            {
-                var settings = new GoogleJsonWebSignature.ValidationSettings
-                {
-                    Audience = new[] { "YOUR_GOOGLE_CLIENT_ID" } // Reemplaza con tu Client ID de Google
-                };
-
-                var payload = await GoogleJsonWebSignature.ValidateAsync(token, settings);
-                return payload;
-            }
-            catch
-            {
-                return null;
-            }
-        }
     }
 
-    // Modelo de solicitud de login con Google
-    public class GoogleLoginRequest
+    public class RegisterRequest
     {
-        public string Token { get; set; }
+        public string Nombre { get; set; }
+        public string Email { get; set; }
+        public string Password { get; set; }
+    }
+
+    public class LoginRequest
+    {
+        public string Email { get; set; }
+        public string Password { get; set; }
     }
 }

@@ -1,5 +1,8 @@
 using Npgsql;
 using Restaurante.Repositories.Interfaces;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Restaurante.Repositories
 {
@@ -24,10 +27,10 @@ namespace Restaurante.Repositories
                 await connection.OpenAsync();
                 string query = @"
                     INSERT INTO Productos (
-                        Nombre, Descripcion, Precio, ImagenUrl, Categorias, Cantidad
+                        Nombre, Descripcion, Precio, ImagenUrl, Categorias, Alergenos
                     ) 
                     VALUES (
-                        @Nombre, @Descripcion, @Precio, @ImagenUrl, @Categorias, @Cantidad
+                        @Nombre, @Descripcion, @Precio, @ImagenUrl, @Categorias, @Alergenos
                     )";
                 using (var command = new NpgsqlCommand(query, connection))
                 {
@@ -35,8 +38,8 @@ namespace Restaurante.Repositories
                     command.Parameters.AddWithValue("@Descripcion", producto.Descripcion);
                     command.Parameters.AddWithValue("@Precio", producto.Precio);
                     command.Parameters.AddWithValue("@ImagenUrl", producto.ImagenUrl);
-                    command.Parameters.AddWithValue("@Categorias", producto.Categorias);
-                    command.Parameters.AddWithValue("@Cantidad", producto.Cantidad);
+                    command.Parameters.AddWithValue("@Categorias", producto.Categorias ?? new List<string>());
+                    command.Parameters.AddWithValue("@Alergenos", producto.Alergenos ?? new List<string>());
                     await command.ExecuteNonQueryAsync();
                 }
             }
@@ -62,22 +65,59 @@ namespace Restaurante.Repositories
             using (var connection = new NpgsqlConnection(_connectionString))
             {
                 await connection.OpenAsync();
-                string query = "SELECT Id, Nombre, Descripcion, Precio, ImagenUrl, Categorias, Cantidad FROM Productos";
+                string query = "SELECT Id, Nombre, Descripcion, Precio, ImagenUrl, Categorias, Alergenos FROM Productos";
                 using (var command = new NpgsqlCommand(query, connection))
                 using (var reader = await command.ExecuteReaderAsync())
                 {
                     while (await reader.ReadAsync())
                     {
-                        productos.Add(new Productos
+                        var producto = new Productos
                         {
                             Id = reader.GetInt32(0),
                             Nombre = reader.GetString(1),
                             Descripcion = reader.GetString(2),
                             Precio = reader.GetDecimal(3),
                             ImagenUrl = reader.GetString(4),
-                            Categorias = reader[5] as List<string> ?? new List<string>(),
-                            Cantidad = reader.GetInt32(6)
-                        });
+                            // Inicializar las listas vacías para evitar nulos
+                            Categorias = new List<string>(),
+                            Alergenos = new List<string>()
+                        };
+
+                        // Para Categorias
+                        if (!reader.IsDBNull(5))
+                        {
+                            try 
+                            {
+                                // Intentar convertir directamente el valor a array de string
+                                if (reader.GetValue(5) is string[] categoriasArray)
+                                {
+                                    producto.Categorias = categoriasArray.ToList();
+                                }
+                            }
+                            catch 
+                            {
+                                // Si falla, dejamos la lista vacía
+                            }
+                        }
+
+                        // Para Alergenos
+                        if (!reader.IsDBNull(6))
+                        {
+                            try 
+                            {
+                                // Intentar convertir directamente el valor a array de string
+                                if (reader.GetValue(6) is string[] alergenosArray)
+                                {
+                                    producto.Alergenos = alergenosArray.ToList();
+                                }
+                            }
+                            catch 
+                            {
+                                // Si falla, dejamos la lista vacía
+                            }
+                        }
+
+                        productos.Add(producto);
                     }
                 }
             }
@@ -90,7 +130,7 @@ namespace Restaurante.Repositories
             using (var connection = new NpgsqlConnection(_connectionString))
             {
                 await connection.OpenAsync();
-                string query = "SELECT Id, Nombre, Descripcion, Precio, ImagenUrl, Categorias, Cantidad FROM Productos WHERE Id = @Id";
+                string query = "SELECT Id, Nombre, Descripcion, Precio, ImagenUrl, Categorias, Alergenos FROM Productos WHERE Id = @Id";
                 using (var command = new NpgsqlCommand(query, connection))
                 {
                     command.Parameters.AddWithValue("@Id", productoID);
@@ -105,9 +145,44 @@ namespace Restaurante.Repositories
                                 Descripcion = reader.GetString(2),
                                 Precio = reader.GetDecimal(3),
                                 ImagenUrl = reader.GetString(4),
-                                Categorias = reader[5] as List<string> ?? new List<string>(),
-                                Cantidad = reader.GetInt32(6)
+                                // Inicializar las listas vacías para evitar nulos
+                                Categorias = new List<string>(),
+                                Alergenos = new List<string>()
                             };
+
+                            // Para Categorias
+                            if (!reader.IsDBNull(5))
+                            {
+                                try 
+                                {
+                                    // Intentar convertir directamente el valor a array de string
+                                    if (reader.GetValue(5) is string[] categoriasArray)
+                                    {
+                                        producto.Categorias = categoriasArray.ToList();
+                                    }
+                                }
+                                catch 
+                                {
+                                    // Si falla, dejamos la lista vacía
+                                }
+                            }
+
+                            // Para Alergenos
+                            if (!reader.IsDBNull(6))
+                            {
+                                try 
+                                {
+                                    // Intentar convertir directamente el valor a array de string
+                                    if (reader.GetValue(6) is string[] alergenosArray)
+                                    {
+                                        producto.Alergenos = alergenosArray.ToList();
+                                    }
+                                }
+                                catch 
+                                {
+                                    // Si falla, dejamos la lista vacía
+                                }
+                            }
                         }
                     }
                 }
@@ -127,7 +202,7 @@ namespace Restaurante.Repositories
                         Precio = @Precio, 
                         ImagenUrl = @ImagenUrl, 
                         Categorias = @Categorias, 
-                        Cantidad = @Cantidad
+                        Alergenos = @Alergenos
                     WHERE Id = @Id";
                 using (var command = new NpgsqlCommand(query, connection))
                 {
@@ -135,8 +210,8 @@ namespace Restaurante.Repositories
                     command.Parameters.AddWithValue("@Descripcion", producto.Descripcion);
                     command.Parameters.AddWithValue("@Precio", producto.Precio);
                     command.Parameters.AddWithValue("@ImagenUrl", producto.ImagenUrl);
-                    command.Parameters.AddWithValue("@Categorias", producto.Categorias);
-                    command.Parameters.AddWithValue("@Cantidad", producto.Cantidad);
+                    command.Parameters.AddWithValue("@Categorias", producto.Categorias ?? new List<string>());
+                    command.Parameters.AddWithValue("@Alergenos", producto.Alergenos ?? new List<string>());
                     command.Parameters.AddWithValue("@Id", producto.Id);
                     await command.ExecuteNonQueryAsync();
                 }

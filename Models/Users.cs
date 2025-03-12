@@ -1,36 +1,37 @@
-
-
 public class Users
 {
     public int UserID { get; set; }
     public string Nombre { get; set; }
-    public string Correo { get; set; }
+    public string Email { get; set; }
     public string Password { get; set; }
-    public string GoogleId { get; set; } // ID único de Google
-    public string PictureUrl { get; set; } // Foto de perfil de Google
+    public string? GoogleId { get; set; } // ID único de Google (opcional)
+    public string? PictureUrl { get; set; } // Foto de perfil de Google (opcional)
     public string[] Roles { get; set; }
+
+    public string? Telefono { get; set; }
+    public DateTime? FechaNacimiento { get; set; }
 
     // Constructor por defecto
     public Users()
     {
-        Roles = Array.Empty<string>(); // Inicializa el array vacío
+        Roles = Array.Empty<string>();
     }
 
     // Constructor opcional para inicialización rápida
-    public Users(string nombre, string correo, string password, string googleId, string pictureUrl, string[] roles)
+    public Users(string nombre, string Email, string password, string? googleId, string? pictureUrl, string[] roles, string? telefono, DateTime? fechaNacimiento)
     {
         Nombre = nombre;
-        Correo = correo;
+        Email = Email;
         Password = password;
         GoogleId = googleId;
         PictureUrl = pictureUrl;
         Roles = roles;
+        Telefono = telefono;
+        FechaNacimiento = fechaNacimiento;
     }
-
     // Método opcional para depuración (ToString)
     public override string ToString()
     {
-        return $"{Nombre} ({Correo}) - GoogleID: {GoogleId}, Roles: {string.Join(", ", Roles)}";
+        return $"{Nombre} ({Email}) - GoogleID: {GoogleId}, Roles: {string.Join(", ", Roles)}";
     }
 }
-

@@ -1,8 +1,10 @@
+using CineAPI.Models.DTOs;
 using CineAPI.Repositories.Interfaces;
-using System.Security.Cryptography;
-using System.Text;
 using CineAPI.Services.Interfaces;
 using Google.Apis.Auth;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace CineAPI.Services
 {
@@ -15,116 +17,142 @@ namespace CineAPI.Services
             _userRepository = userRepository;
         }
 
+        // Obtener usuario por Google ID
+        public async Task<Users?> GetUserByGoogleIdAsync(string googleId)
+        {
+            return await _userRepository.GetByGoogleIdAsync(googleId);
+        }
+
+        // Agregar usuario con encriptación segura
         public async Task AddUserAsync(Users user)
         {
-            // Validar si el correo ya existe
-            var existingUser = await _userRepository.GetByEmailAsync(user.Correo);
+            var existingUser = await _userRepository.GetByEmailAsync(user.Email.ToLowerInvariant());
             if (existingUser != null)
             {
-                throw new System.Exception("El correo ya está registrado.");
+                throw new Exception("El Email ya está registrado.");
             }
 
-            // Hashear la contraseña antes de agregar
-            user.Password = HashPassword(user.Password);
+            // ✅ Validar que la contraseña no sea null o vacía
+            if (string.IsNullOrEmpty(user.Password))
+            {
+                throw new Exception("La contraseña no puede estar vacía.");
+            }
 
-            // Agregar el usuario al repositorio
+            // ✅ Hashear la contraseña antes de guardar
+            user.Password = HashPassword(user.Password);
+            user.Email = user.Email.ToLowerInvariant();
+
             await _userRepository.AddAsync(user);
         }
 
+        // Eliminar usuario
         public async Task DeleteUserAsync(int userId)
         {
-            // Verificar si el usuario existe
             var user = await _userRepository.GetByIdAsync(userId);
             if (user == null)
             {
-                throw new System.Exception("Usuario no encontrado.");
+                throw new Exception("Usuario no encontrado.");
             }
 
-            // Eliminar el usuario
             await _userRepository.DeleteAsync(userId);
         }
 
+        // Obtener todos los usuarios
         public async Task<IEnumerable<Users>> GetAllUsersAsync()
         {
             return await _userRepository.GetAllAsync();
         }
 
+        // Obtener usuario por ID
         public async Task<Users?> GetUserByIdAsync(int userId)
         {
             return await _userRepository.GetByIdAsync(userId);
         }
 
+        // Obtener usuario por Email
         public async Task<Users?> GetUserByEmailAsync(string email)
         {
-            return await _userRepository.GetByEmailAsync(email);
+            return await _userRepository.GetByEmailAsync(email.ToLowerInvariant());
         }
 
+        // Actualizar usuario completo
         public async Task UpdateUserAsync(Users user)
         {
-            // Verificar si el usuario existe
             var existingUser = await _userRepository.GetByIdAsync(user.UserID);
             if (existingUser == null)
             {
-                throw new System.Exception("Usuario no encontrado.");
+                throw new Exception("Usuario no encontrado.");
             }
 
-            // Hashear la contraseña si se proporciona una nueva
+            // Si se proporciona una nueva contraseña, la hasheamos antes de actualizar
             if (!string.IsNullOrEmpty(user.Password))
             {
                 user.Password = HashPassword(user.Password);
             }
 
-            // Actualizar el usuario
+            // Normalizamos el email
+            user.Email = user.Email.ToLowerInvariant();
+
             await _userRepository.UpdateAsync(user);
         }
 
-        private string HashPassword(string password)
+        // Actualizar información básica del usuario
+        public async Task UpdateUserBasicInfo(int userId, UserUpdateDto updateDto)
         {
-            using var sha256 = SHA256.Create();
-            var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-            return Convert.ToBase64String(hashedBytes);
+            var existingUser = await _userRepository.GetByIdAsync(userId);
+            if (existingUser == null)
+            {
+                throw new Exception("Usuario no encontrado.");
+            }
+
+            // Actualizar solo los campos básicos
+            existingUser.Nombre = updateDto.Nombre;
+            existingUser.Email = updateDto.Email.ToLowerInvariant();
+            existingUser.Telefono = updateDto.Telefono;
+            existingUser.FechaNacimiento = updateDto.FechaNacimiento;
+
+            // Mantener los demás campos sin cambios
+            await _userRepository.UpdateAsync(existingUser);
         }
 
-        // Implementación de GetOrCreateUserAsync para Google
+        // Método para encriptar contraseñas con BCrypt
+        public string HashPassword(string password)
+        {
+            return BCrypt.Net.BCrypt.HashPassword(password);
+        }
+
+        // Método para verificar contraseñas (comparación con BCrypt)
+        public bool VerifyPassword(string password, string hashedPassword)
+        {
+            return BCrypt.Net.BCrypt.Verify(password, hashedPassword);
+        }
+
+        // Obtener o crear usuario desde Google OAuth
         public async Task<Users> GetOrCreateUserAsync(GoogleJsonWebSignature.Payload payload)
         {
-            // Buscar el usuario por GoogleId o Correo
-            var user = await _userRepository.GetByGoogleIdAsync(payload.Subject)
-                       ?? await _userRepository.GetByEmailAsync(payload.Email);
+            var emailNormalized = payload.Email.ToLowerInvariant();
+            var user = await _userRepository.GetByEmailAsync(emailNormalized);
 
-            // Si el usuario no existe, crearlo
             if (user == null)
             {
-                // Determinar el rol basado en el correo
-                string[] roles = new string[] { "User" };  // Rol por defecto
-
-                // Asignar rol Admin si el correo pertenece a un dominio específico (ejemplo)
-                if (payload.Email.EndsWith("@admin.com")) // Cambia esto a tu lógica de asignación de Admin
-                {
-                    roles = new string[] { "Admin" };
-                }
-
                 user = new Users
                 {
                     Nombre = payload.Name,
-                    Correo = payload.Email,
-                    GoogleId = payload.Subject,  // GoogleId único para cada usuario
-                    PictureUrl = payload.Picture, // Foto de perfil proporcionada por Google
-                    Roles = roles // Asignar el rol correspondiente
+                    Email = emailNormalized,
+                    GoogleId = payload.Subject, 
+                    PictureUrl = payload.Picture, 
+                    Roles = new string[] { "User" }
                 };
 
-                await _userRepository.AddAsync(user); // Agregar el nuevo usuario
+                await _userRepository.AddAsync(user);
+                Console.WriteLine($"Nuevo usuario creado: {user.Nombre} - {user.Email} con imagen {user.PictureUrl}");
             }
             else
             {
-                // Si ya existe, actualizar algunos detalles (si es necesario)
-                user.Nombre = payload.Name;
-                user.PictureUrl = payload.Picture; // Actualizar la foto si ha cambiado
-                await _userRepository.UpdateAsync(user);
+                Console.WriteLine($"Usuario ya existe: {user.Nombre} - {user.Email} con imagen {user.PictureUrl}");
             }
 
             return user;
         }
-
     }
 }

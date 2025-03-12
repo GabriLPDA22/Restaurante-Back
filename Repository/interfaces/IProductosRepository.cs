@@ -1,5 +1,7 @@
-namespace Restaurante.Repositories.Interfaces
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
+namespace Restaurante.Repositories.Interfaces
 {
     public interface IProductosRepository
     {
