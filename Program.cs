@@ -40,6 +40,11 @@ builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<IItemsRepository>(provider => 
     new ItemsRepository(postgresConnection));
 builder.Services.AddScoped<IItemsService, ItemsService>();
+
+builder.Services.AddScoped<IErrorCounterRepository>(provider =>
+    new ErrorCounterRepository(postgresConnection));
+builder.Services.AddScoped<IErrorCounterService, ErrorCounterService>();
+
 // Configurar CORS para permitir peticiones desde localhost:5173 (React/Vue/Angular en desarrollo)
 builder.Services.AddCors(options =>
 {
