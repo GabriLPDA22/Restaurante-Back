@@ -48,6 +48,10 @@ builder.Services.AddScoped<IItemsRepository>(provider =>
     new ItemsRepository(postgresConnection));
 builder.Services.AddScoped<IItemsService, ItemsService>();
 
+builder.Services.AddScoped<IPruebaRepository>(provider => 
+    new PruebaRepository(postgresConnection));
+builder.Services.AddScoped<IPruebaService, PruebaService>();
+
 builder.Services.AddScoped<IErrorCounterRepository>(provider =>
     new ErrorCounterRepository(postgresConnection));
 builder.Services.AddScoped<IErrorCounterService, ErrorCounterService>();
