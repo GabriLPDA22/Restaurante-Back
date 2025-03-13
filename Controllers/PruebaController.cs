@@ -13,16 +13,11 @@ namespace Restaurante.Controllers
     {
         private readonly IPruebaService _pruebaService;
 
-        /// Constructor para inyectar el servicio de prueba.
-        /// <param name="pruebaService">Servicio de prueba.</param>
         public PruebaController(IPruebaService pruebaService)
         {
             _pruebaService = pruebaService;
         }
 
-        /// 
-        /// Obtiene todos los prueba.
-        /// <returns>Lista de prueba.</returns>
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Prueba>>> GetAllPrueba()
         {
@@ -30,11 +25,6 @@ namespace Restaurante.Controllers
             return Ok(prueba);
         }
 
-        /// 
-        /// Obtiene un prueba por su ID.
-        /// 
-        /// <param name="id">ID del prueba.</param>
-        /// <returns>Prueba.</returns>
         [HttpGet("{id}")]
         public async Task<ActionResult<Prueba>> GetPruebaById(int id)
         {
@@ -44,24 +34,18 @@ namespace Restaurante.Controllers
             return Ok(prueba);
         }
 
-        /// 
-        /// Crea un nuevo prueba.
-        /// 
-        /// <param name="prueba">Datos del prueba.</param>
-        /// <returns>Prueba creado.</returns>
         [HttpPost]
         public async Task<ActionResult<Prueba>> CreatePrueba(Prueba prueba)
         {
-            await _pruebaService.CreatePrueba(prueba);
+            // Asegurarnos de que no se requiera Email para la creación
+            var success = await _pruebaService.CreatePrueba(prueba);
+            
+            if (!success)
+                return BadRequest("No se pudo crear el registro.");
+                
             return CreatedAtAction(nameof(GetPruebaById), new { id = prueba.ID }, prueba);
         }
 
-        /// 
-        /// Actualiza información básica de un prueba existente.
-        /// 
-        /// <param name="id">ID del prueba.</param>
-        /// <param name="pruebaDto">Datos básicos del prueba a actualizar.</param>
-        /// <returns>No content si se actualizó correctamente.</returns>
         [HttpPut("{id}")]
         public async Task<ActionResult> UpdatePrueba(int id, Prueba prueba)
         {
@@ -76,21 +60,12 @@ namespace Restaurante.Controllers
                     
                 return NoContent();
             }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
             catch (Exception ex)
             {
                 return BadRequest(new { Message = ex.Message });
             }
         }
 
-        /// 
-        /// Elimina un prueba por su ID.
-        /// 
-        /// <param name="id">ID del prueba a eliminar.</param>
-        /// <returns>No content si se eliminó correctamente.</returns>
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeletePrueba(int id)
         {

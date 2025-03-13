@@ -28,12 +28,12 @@ namespace Restaurante.Repositories
 
             while (await reader.ReadAsync())
             {
-                pruebas.Add(new Prueba(
-                    reader.GetInt32(0),
-                    reader.GetString(1),
-                    reader.GetString(2),
-                    reader.GetString(3)
-                ));
+                int id = reader.GetInt32(0);
+                string nombre = !reader.IsDBNull(1) ? reader.GetString(1) : string.Empty;
+                string email = !reader.IsDBNull(2) ? reader.GetString(2) : string.Empty;
+                string password = !reader.IsDBNull(3) ? reader.GetString(3) : string.Empty;
+                
+                pruebas.Add(new Prueba(id, nombre, email, password));
             }
 
             return pruebas;
@@ -50,12 +50,12 @@ namespace Restaurante.Repositories
             using var reader = await command.ExecuteReaderAsync();
             if (await reader.ReadAsync())
             {
-                return new Prueba(
-                    reader.GetInt32(0),
-                    reader.GetString(1),
-                    reader.GetString(2),
-                    reader.GetString(3)
-                );
+                int pruebaId = reader.GetInt32(0);
+                string nombre = !reader.IsDBNull(1) ? reader.GetString(1) : string.Empty;
+                string email = !reader.IsDBNull(2) ? reader.GetString(2) : string.Empty;
+                string password = !reader.IsDBNull(3) ? reader.GetString(3) : string.Empty;
+                
+                return new Prueba(pruebaId, nombre, email, password);
             }
 
             return null;
@@ -69,9 +69,22 @@ namespace Restaurante.Repositories
             using var command = new NpgsqlCommand(
                 "INSERT INTO prueba (nombre, email, password) VALUES (@Nombre, @Email, @Password) RETURNING id",
                 connection);
-            command.Parameters.AddWithValue("@Nombre", prueba.Nombre);
-            command.Parameters.AddWithValue("@Email", prueba.Email);
-            command.Parameters.AddWithValue("@Password", prueba.Password);
+
+            // Manejar correctamente los valores nulos
+            if (prueba.Nombre != null)
+                command.Parameters.AddWithValue("@Nombre", prueba.Nombre);
+            else
+                command.Parameters.AddWithValue("@Nombre", DBNull.Value);
+
+            if (prueba.Email != null)
+                command.Parameters.AddWithValue("@Email", prueba.Email);
+            else
+                command.Parameters.AddWithValue("@Email", DBNull.Value);
+
+            if (prueba.Password != null)
+                command.Parameters.AddWithValue("@Password", prueba.Password);
+            else
+                command.Parameters.AddWithValue("@Password", DBNull.Value);
 
             // Obtener el ID generado automáticamente
             var newId = await command.ExecuteScalarAsync();
@@ -92,10 +105,24 @@ namespace Restaurante.Repositories
             using var command = new NpgsqlCommand(
                 "UPDATE prueba SET nombre = @Nombre, email = @Email, password = @Password WHERE id = @Id",
                 connection);
+                
             command.Parameters.AddWithValue("@Id", prueba.ID);
-            command.Parameters.AddWithValue("@Nombre", prueba.Nombre);
-            command.Parameters.AddWithValue("@Email", prueba.Email);
-            command.Parameters.AddWithValue("@Password", prueba.Password);
+            
+            // Manejar correctamente los valores nulos
+            if (prueba.Nombre != null)
+                command.Parameters.AddWithValue("@Nombre", prueba.Nombre);
+            else
+                command.Parameters.AddWithValue("@Nombre", DBNull.Value);
+
+            if (prueba.Email != null)
+                command.Parameters.AddWithValue("@Email", prueba.Email);
+            else
+                command.Parameters.AddWithValue("@Email", DBNull.Value);
+
+            if (prueba.Password != null)
+                command.Parameters.AddWithValue("@Password", prueba.Password);
+            else
+                command.Parameters.AddWithValue("@Password", DBNull.Value);
 
             return await command.ExecuteNonQueryAsync() > 0;
         }
