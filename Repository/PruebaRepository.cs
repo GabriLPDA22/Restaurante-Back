@@ -1,6 +1,7 @@
 using Npgsql;
 using Restaurante.Models;
 using Restaurante.Repositories.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -17,7 +18,7 @@ namespace Restaurante.Repositories
 
         public async Task<IEnumerable<Prueba>> GetAllAsync()
         {
-            var prueba = new List<Prueba>();
+            var pruebas = new List<Prueba>();
 
             using var connection = new NpgsqlConnection(_connectionString);
             await connection.OpenAsync();
@@ -27,16 +28,15 @@ namespace Restaurante.Repositories
 
             while (await reader.ReadAsync())
             {
-                prueba.Add(new Prueba
-                {   
-                    ID = reader.GetInt32(0),
-                    Nombre = reader.GetInt32(1),
-                    Email = reader.GetDateTime(2),
-                    Password = reader.GetInt32(3)
-                });
+                pruebas.Add(new Prueba(
+                    reader.GetInt32(0),
+                    reader.GetString(1),
+                    reader.GetString(2),
+                    reader.GetString(3)
+                ));
             }
 
-            return prueba;
+            return pruebas;
         }
 
         public async Task<Prueba?> GetByIdAsync(int id)
@@ -50,13 +50,12 @@ namespace Restaurante.Repositories
             using var reader = await command.ExecuteReaderAsync();
             if (await reader.ReadAsync())
             {
-            return new Prueba
-            {
-                ID = reader.GetInt32(0),
-                Nombre = reader.GetString(1),
-                Email = reader.GetString(2),
-                Password = reader.GetString(3)
-            };
+                return new Prueba(
+                    reader.GetInt32(0),
+                    reader.GetString(1),
+                    reader.GetString(2),
+                    reader.GetString(3)
+                );
             }
 
             return null;
@@ -68,8 +67,8 @@ namespace Restaurante.Repositories
             await connection.OpenAsync();
 
             using var command = new NpgsqlCommand(
-            "INSERT INTO prueba (nombre, email, password) VALUES (@Nombre, @Email, @Password) RETURNING id",
-            connection);
+                "INSERT INTO prueba (nombre, email, password) VALUES (@Nombre, @Email, @Password) RETURNING id",
+                connection);
             command.Parameters.AddWithValue("@Nombre", prueba.Nombre);
             command.Parameters.AddWithValue("@Email", prueba.Email);
             command.Parameters.AddWithValue("@Password", prueba.Password);
@@ -78,8 +77,8 @@ namespace Restaurante.Repositories
             var newId = await command.ExecuteScalarAsync();
             if (newId != null)
             {
-            prueba.ID = Convert.ToInt32(newId);
-            return true;
+                prueba.ID = Convert.ToInt32(newId);
+                return true;
             }
 
             return false;
@@ -93,6 +92,7 @@ namespace Restaurante.Repositories
             using var command = new NpgsqlCommand(
                 "UPDATE prueba SET nombre = @Nombre, email = @Email, password = @Password WHERE id = @Id",
                 connection);
+            command.Parameters.AddWithValue("@Id", prueba.ID);
             command.Parameters.AddWithValue("@Nombre", prueba.Nombre);
             command.Parameters.AddWithValue("@Email", prueba.Email);
             command.Parameters.AddWithValue("@Password", prueba.Password);

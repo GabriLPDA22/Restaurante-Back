@@ -26,7 +26,7 @@ namespace Restaurante.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Prueba>>> GetAllPrueba()
         {
-            var prueba = await _pruebaService.GetAllPruebaAsync();
+            var prueba = await _pruebaService.GetAllPrueba();
             return Ok(prueba);
         }
 
@@ -38,7 +38,7 @@ namespace Restaurante.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Prueba>> GetPruebaById(int id)
         {
-            var prueba = await _pruebaService.GetPruebaByIdAsync(id);
+            var prueba = await _pruebaService.GetPruebaById(id);
             if (prueba == null)
                 return NotFound("El prueba no fue encontrado.");
             return Ok(prueba);
@@ -52,8 +52,8 @@ namespace Restaurante.Controllers
         [HttpPost]
         public async Task<ActionResult<Prueba>> CreatePrueba(Prueba prueba)
         {
-            await _pruebaService.AddPruebaAsync(prueba);
-            return CreatedAtAction(nameof(GetPruebaById), new { id = prueba.Id }, prueba);
+            await _pruebaService.CreatePrueba(prueba);
+            return CreatedAtAction(nameof(GetPruebaById), new { id = prueba.ID }, prueba);
         }
 
         /// 
@@ -67,16 +67,22 @@ namespace Restaurante.Controllers
         {
             try
             {
-            await _pruebaService.UpdatePruebaBasicInfoAsync(id, prueba);
-            return NoContent();
+                if (id != prueba.ID)
+                    return BadRequest("ID de prueba no coincide.");
+                
+                var success = await _pruebaService.UpdatePrueba(prueba);
+                if (!success)
+                    return NotFound("El prueba no fue encontrado.");
+                    
+                return NoContent();
             }
             catch (KeyNotFoundException ex)
             {
-            return NotFound(ex.Message);
+                return NotFound(ex.Message);
             }
             catch (Exception ex)
             {
-            return BadRequest(new { Message = ex.Message });
+                return BadRequest(new { Message = ex.Message });
             }
         }
 
@@ -88,11 +94,11 @@ namespace Restaurante.Controllers
         [HttpDelete("{id}")]
         public async Task<ActionResult> DeletePrueba(int id)
         {
-            var prueba = await _pruebaService.GetPruebaByIdAsync(id);
+            var prueba = await _pruebaService.GetPruebaById(id);
             if (prueba == null)
                 return NotFound("El prueba no fue encontrado.");
 
-            await _pruebaService.DeletePruebaAsync(id);
+            await _pruebaService.DeletePrueba(id);
             return NoContent();
         }
     }
