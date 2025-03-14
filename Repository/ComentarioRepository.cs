@@ -33,8 +33,9 @@ namespace Restaurante.Repositories
                 string email = !reader.IsDBNull(2) ? reader.GetString(2) : string.Empty;
                 string comentarioTexto = !reader.IsDBNull(3) ? reader.GetString(3) : string.Empty;
                 DateTime fecha = reader.GetDateTime(4);
+                int productoId = reader.IsDBNull(5) ? 0 : reader.GetInt32(5);
 
-                comentarios.Add(new Comentario(id, nombre, email, comentarioTexto, fecha));
+                comentarios.Add(new Comentario(id, nombre, email, comentarioTexto, fecha, productoId));
             }
 
             return comentarios;
@@ -56,11 +57,42 @@ namespace Restaurante.Repositories
                 string email = !reader.IsDBNull(2) ? reader.GetString(2) : string.Empty;
                 string comentarioTexto = !reader.IsDBNull(3) ? reader.GetString(3) : string.Empty;
                 DateTime fecha = reader.GetDateTime(4);
+                int productoId = reader.IsDBNull(5) ? 0 : reader.GetInt32(5);
 
-                return new Comentario(comentarioId, nombre, email, comentarioTexto, fecha);
+                return new Comentario(comentarioId, nombre, email, comentarioTexto, fecha, productoId);
             }
 
             return null;
+        }
+
+        public async Task<IEnumerable<Comentario>> GetByProductoIdAsync(int productoId)
+        {
+            var comentarios = new List<Comentario>();
+
+            using var connection = new NpgsqlConnection(_connectionString);
+            await connection.OpenAsync();
+
+            using var command = new NpgsqlCommand(
+                "SELECT * FROM comentario WHERE producto_id = @ProductoId ORDER BY fecha DESC", 
+                connection);
+            
+            command.Parameters.AddWithValue("@ProductoId", productoId);
+            
+            using var reader = await command.ExecuteReaderAsync();
+            
+            while (await reader.ReadAsync())
+            {
+                int id = reader.GetInt32(0);
+                string nombre = !reader.IsDBNull(1) ? reader.GetString(1) : string.Empty;
+                string email = !reader.IsDBNull(2) ? reader.GetString(2) : string.Empty;
+                string comentarioTexto = !reader.IsDBNull(3) ? reader.GetString(3) : string.Empty;
+                DateTime fecha = reader.GetDateTime(4);
+                int prodId = reader.GetInt32(5); // Columna producto_id
+                
+                comentarios.Add(new Comentario(id, nombre, email, comentarioTexto, fecha, prodId));
+            }
+            
+            return comentarios;
         }
 
         public async Task<bool> CreateAsync(Comentario comentario)
@@ -68,11 +100,16 @@ namespace Restaurante.Repositories
             using var connection = new NpgsqlConnection(_connectionString);
             await connection.OpenAsync();
 
-            using var command = new NpgsqlCommand("INSERT INTO comentario (nombre, email, comentario_texto, fecha) VALUES (@Nombre, @Email, @ComentarioTexto, @Fecha) RETURNING id", connection);
+            using var command = new NpgsqlCommand(
+                "INSERT INTO comentario (nombre, email, comentario_texto, fecha, producto_id) " +
+                "VALUES (@Nombre, @Email, @ComentarioTexto, @Fecha, @ProductoId) RETURNING id", 
+                connection);
+            
             command.Parameters.AddWithValue("@Nombre", comentario.Nombre);
             command.Parameters.AddWithValue("@Email", comentario.Email);
             command.Parameters.AddWithValue("@ComentarioTexto", comentario.ComentarioTexto);
             command.Parameters.AddWithValue("@Fecha", comentario.Fecha);
+            command.Parameters.AddWithValue("@ProductoId", comentario.ProductoId);
 
             var result = await command.ExecuteScalarAsync();
             if (result != null && result != DBNull.Value)
@@ -88,12 +125,17 @@ namespace Restaurante.Repositories
             using var connection = new NpgsqlConnection(_connectionString);
             await connection.OpenAsync();
 
-            using var command = new NpgsqlCommand("UPDATE comentario SET nombre = @Nombre, email = @Email, comentario_texto = @ComentarioTexto, fecha = @Fecha WHERE id = @Id", connection);
+            using var command = new NpgsqlCommand(
+                "UPDATE comentario SET nombre = @Nombre, email = @Email, comentario_texto = @ComentarioTexto, " +
+                "fecha = @Fecha, producto_id = @ProductoId WHERE id = @Id", 
+                connection);
+            
             command.Parameters.AddWithValue("@Id", comentario.IdComentario);
             command.Parameters.AddWithValue("@Nombre", comentario.Nombre);
             command.Parameters.AddWithValue("@Email", comentario.Email);
             command.Parameters.AddWithValue("@ComentarioTexto", comentario.ComentarioTexto);
             command.Parameters.AddWithValue("@Fecha", comentario.Fecha);
+            command.Parameters.AddWithValue("@ProductoId", comentario.ProductoId);
 
             int rowsAffected = await command.ExecuteNonQueryAsync();
             return rowsAffected > 0;

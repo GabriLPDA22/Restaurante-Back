@@ -34,6 +34,10 @@ namespace Restaurante.Controllers
             return comentario;
         }
 
+        [HttpGet("producto/{productoId}")]
+        public async Task<IEnumerable<Comentario>> GetComentariosByProducto(int productoId) => 
+            await _comentarioService.GetComentariosByProducto(productoId);
+
         [HttpPost]
         public async Task<ActionResult<Comentario>> CreateComentario(Comentario comentario)
         {

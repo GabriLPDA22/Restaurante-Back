@@ -8,6 +8,7 @@ namespace Restaurante.Services.Interfaces
     {
         Task<IEnumerable<Comentario>> GetAllComentario();
         Task<Comentario?> GetComentarioById(int id);
+        Task<IEnumerable<Comentario>> GetComentariosByProducto(int productoId);
         Task<bool> CreateComentario(Comentario comentario);
         Task<bool> UpdateComentario(Comentario comentario);
         Task<bool> DeleteComentario(int id);

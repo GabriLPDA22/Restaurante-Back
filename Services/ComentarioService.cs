@@ -21,6 +21,9 @@ namespace Restaurante.Services
         public async Task<Comentario?> GetComentarioById(int id) => 
             await _comentarioRepository.GetByIdAsync(id);
 
+        public async Task<IEnumerable<Comentario>> GetComentariosByProducto(int productoId) => 
+            await _comentarioRepository.GetByProductoIdAsync(productoId);
+
         public async Task<bool> CreateComentario(Comentario comentario) => 
             await _comentarioRepository.CreateAsync(comentario);
 

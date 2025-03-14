@@ -8,6 +8,7 @@ namespace Restaurante.Repositories.Interfaces
     {
         Task<IEnumerable<Comentario>> GetAllAsync();
         Task<Comentario?> GetByIdAsync(int id);
+        Task<IEnumerable<Comentario>> GetByProductoIdAsync(int productoId);
         Task<bool> CreateAsync(Comentario comentario);
         Task<bool> UpdateAsync(Comentario comentario);
         Task<bool> DeleteAsync(int id);
