@@ -52,6 +52,10 @@ builder.Services.AddScoped<IPruebaRepository>(provider =>
     new PruebaRepository(postgresConnection));
 builder.Services.AddScoped<IPruebaService, PruebaService>();
 
+builder.Services.AddScoped<IComentarioRepository>(provider => 
+    new ComentarioRepository(postgresConnection));
+builder.Services.AddScoped<IComentarioService, ComentarioService>();
+
 builder.Services.AddScoped<IErrorCounterRepository>(provider =>
     new ErrorCounterRepository(postgresConnection));
 builder.Services.AddScoped<IErrorCounterService, ErrorCounterService>();
