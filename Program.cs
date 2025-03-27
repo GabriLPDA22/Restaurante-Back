@@ -28,27 +28,27 @@ builder.Services.AddScoped<IProductosRepository>(provider =>
     new ProductosRepository(postgresConnection));
 builder.Services.AddScoped<IProductosService, ProductosService>();
 
-builder.Services.AddScoped<IUserRepository>(provider => 
+builder.Services.AddScoped<IUserRepository>(provider =>
     new UserRepository(postgresConnection));
 builder.Services.AddScoped<IUserService, UserService>();
 
-builder.Services.AddScoped<IReservationRepository>(provider => 
+builder.Services.AddScoped<IReservationRepository>(provider =>
     new ReservationRepository(postgresConnection));
 builder.Services.AddScoped<IReservationService, ReservationService>();
 
-builder.Services.AddScoped<IPedidoRepository>(provider => 
+builder.Services.AddScoped<IPedidoRepository>(provider =>
     new PedidoRepository(postgresConnection));
 builder.Services.AddScoped<IPedidoService, PedidoService>();
 
-builder.Services.AddScoped<IAdminRepository>(provider => 
+builder.Services.AddScoped<IAdminRepository>(provider =>
     new AdminRepository(postgresConnection));
 builder.Services.AddScoped<IAdminService, AdminService>();
 
-builder.Services.AddScoped<IItemsRepository>(provider => 
+builder.Services.AddScoped<IItemsRepository>(provider =>
     new ItemsRepository(postgresConnection));
 builder.Services.AddScoped<IItemsService, ItemsService>();
 
-builder.Services.AddScoped<IPruebaRepository>(provider => 
+builder.Services.AddScoped<IPruebaRepository>(provider =>
     new PruebaRepository(postgresConnection));
 builder.Services.AddScoped<IPruebaService, PruebaService>();
 
@@ -56,6 +56,9 @@ builder.Services.AddScoped<IErrorCounterRepository>(provider =>
     new ErrorCounterRepository(postgresConnection));
 builder.Services.AddScoped<IErrorCounterService, ErrorCounterService>();
 
+builder.Services.AddScoped<IFavoritosRepository>(provider =>
+    new FavoritosRepository(postgresConnection));
+builder.Services.AddScoped<IFavoritosService, FavoritosService>();
 // Configurar CORS para permitir peticiones desde localhost:5173 (React/Vue/Angular en desarrollo)
 builder.Services.AddCors(options =>
 {
