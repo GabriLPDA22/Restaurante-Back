@@ -21,8 +21,6 @@ if (string.IsNullOrEmpty(postgresConnection))
     throw new InvalidOperationException("La cadena de conexión de la base de datos no está configurada. Verifica tu archivo appsettings.json.");
 }
 
-Console.WriteLine($"DATABASE_URL: {postgresConnection}");
-
 // Configurar los repositorios con la conexión a PostgreSQL
 builder.Services.AddScoped<IProductosRepository>(provider =>
     new ProductosRepository(postgresConnection));
