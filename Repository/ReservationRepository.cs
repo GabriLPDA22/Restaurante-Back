@@ -1,6 +1,7 @@
 using Npgsql;
 using Restaurante.Models;
 using Restaurante.Repositories.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -22,7 +23,7 @@ namespace Restaurante.Repositories
             using var connection = new NpgsqlConnection(_connectionString);
             await connection.OpenAsync();
 
-            using var command = new NpgsqlCommand("SELECT * FROM reservations", connection);
+            using var command = new NpgsqlCommand("SELECT * FROM reservations ORDER BY datetime DESC", connection);
             using var reader = await command.ExecuteReaderAsync();
 
             while (await reader.ReadAsync())
@@ -32,7 +33,66 @@ namespace Restaurante.Repositories
                     Id = reader.GetInt32(0),
                     DateTime = reader.GetDateTime(1),
                     CustomerName = reader.GetString(2),
-                    TableId = reader.GetInt32(3)
+                    TableId = reader.GetInt32(3),
+                    UserId = reader.GetInt32(4)
+                });
+            }
+
+            return reservations;
+        }
+
+        public async Task<IEnumerable<Reservation>> GetByUserIdAsync(int userId)
+        {
+            var reservations = new List<Reservation>();
+
+            using var connection = new NpgsqlConnection(_connectionString);
+            await connection.OpenAsync();
+
+            using var command = new NpgsqlCommand(
+                "SELECT * FROM reservations WHERE userid = @UserId ORDER BY datetime DESC",
+                connection);
+            command.Parameters.AddWithValue("@UserId", userId);
+
+            using var reader = await command.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                reservations.Add(new Reservation
+                {
+                    Id = reader.GetInt32(0),
+                    DateTime = reader.GetDateTime(1),
+                    CustomerName = reader.GetString(2),
+                    TableId = reader.GetInt32(3),
+                    UserId = reader.GetInt32(4)
+                });
+            }
+
+            return reservations;
+        }
+
+        public async Task<IEnumerable<Reservation>> GetByCustomerNameAsync(string customerName)
+        {
+            var reservations = new List<Reservation>();
+
+            using var connection = new NpgsqlConnection(_connectionString);
+            await connection.OpenAsync();
+
+            using var command = new NpgsqlCommand(
+                "SELECT * FROM reservations WHERE LOWER(customername) = LOWER(@CustomerName) ORDER BY datetime DESC",
+                connection);
+            command.Parameters.AddWithValue("@CustomerName", customerName);
+
+            using var reader = await command.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                reservations.Add(new Reservation
+                {
+                    Id = reader.GetInt32(0),
+                    DateTime = reader.GetDateTime(1),
+                    CustomerName = reader.GetString(2),
+                    TableId = reader.GetInt32(3),
+                    UserId = reader.IsDBNull(4) ? 0 : reader.GetInt32(4)
                 });
             }
 
@@ -55,7 +115,8 @@ namespace Restaurante.Repositories
                     Id = reader.GetInt32(0),
                     DateTime = reader.GetDateTime(1),
                     CustomerName = reader.GetString(2),
-                    TableId = reader.GetInt32(3)
+                    TableId = reader.GetInt32(3),
+                    UserId = reader.IsDBNull(4) ? 0 : reader.GetInt32(4)
                 };
             }
 
@@ -68,11 +129,12 @@ namespace Restaurante.Repositories
             await connection.OpenAsync();
 
             using var command = new NpgsqlCommand(
-                "INSERT INTO reservations (datetime, customername, tableid) VALUES (@DateTime, @CustomerName, @TableId) RETURNING id",
+                "INSERT INTO reservations (datetime, customername, tableid, userid) VALUES (@DateTime, @CustomerName, @TableId, @UserId) RETURNING id",
                 connection);
             command.Parameters.AddWithValue("@DateTime", reservation.DateTime);
             command.Parameters.AddWithValue("@CustomerName", reservation.CustomerName);
             command.Parameters.AddWithValue("@TableId", reservation.TableId);
+            command.Parameters.AddWithValue("@UserId", reservation.UserId);
 
             // Obtener el ID generado automáticamente
             var newId = await command.ExecuteScalarAsync();
@@ -91,11 +153,12 @@ namespace Restaurante.Repositories
             await connection.OpenAsync();
 
             using var command = new NpgsqlCommand(
-                "UPDATE reservations SET datetime = @DateTime, customername = @CustomerName, tableid = @TableId WHERE id = @Id",
+                "UPDATE reservations SET datetime = @DateTime, customername = @CustomerName, tableid = @TableId, userid = @UserId WHERE id = @Id",
                 connection);
             command.Parameters.AddWithValue("@DateTime", reservation.DateTime);
             command.Parameters.AddWithValue("@CustomerName", reservation.CustomerName);
             command.Parameters.AddWithValue("@TableId", reservation.TableId);
+            command.Parameters.AddWithValue("@UserId", reservation.UserId);
             command.Parameters.AddWithValue("@Id", reservation.Id);
 
             return await command.ExecuteNonQueryAsync() > 0;

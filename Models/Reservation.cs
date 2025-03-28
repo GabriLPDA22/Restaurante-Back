@@ -8,5 +8,6 @@ namespace Restaurante.Models
         public DateTime DateTime { get; set; }
         public string CustomerName { get; set; }
         public int TableId { get; set; }
+        public int UserId { get; set; }
     }
 }

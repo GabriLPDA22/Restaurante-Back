@@ -18,6 +18,12 @@ namespace Restaurante.Services
         public async Task<IEnumerable<Reservation>> GetAllReservations() => 
             await _reservationRepository.GetAllAsync();
 
+        public async Task<IEnumerable<Reservation>> GetReservationsByCustomerName(string customerName) =>
+            await _reservationRepository.GetByCustomerNameAsync(customerName);
+
+        public async Task<IEnumerable<Reservation>> GetReservationsByUserId(int userId) =>
+            await _reservationRepository.GetByUserIdAsync(userId);
+
         public async Task<Reservation?> GetReservationById(int id) => 
             await _reservationRepository.GetByIdAsync(id);
 
